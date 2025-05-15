@@ -3,7 +3,7 @@
  * Creation date: 14/05/2025
  */
 MACHINE
-    Cinema_porb
+    Cinema_ProB
 EXTENDS Cinema
     
 CONSTANTS
