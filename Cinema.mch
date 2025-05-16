@@ -81,13 +81,22 @@ OPERATIONS
        sessao := sessao \/ {(ss|->hh)|->ff} 
        ||       ingressos_vendidos:= ingressos_vendidos \/ {(ss|->hh)|->0} 
     END;
-   ComprarIngresso(ss,hh)=
+   ComprarIngresso(ff,hh)=
     PRE
-       ss: SALA 
+//       ss: SALA 
+        ff: FILME
        & hh: HORARIO 
-       & ss: salas 
+//       & ss: salas
+       & #(ss).(ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)) 
+//       &(ss |-> hh) : dom(sessao)
+//       & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)
+     
+    THEN
+    ANY ss
+    WHERE ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff
     THEN
        ingressos_vendidos(ss|->hh) := ingressos_vendidos(ss|->hh) +1
+       END
     END
   
 END
