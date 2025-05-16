@@ -1,7 +1,3 @@
-/* Cinema
- * Author: Eduardo
- * Creation date: 15/05/2025
- */
 MACHINE
     Cinema
     
@@ -18,17 +14,26 @@ SETS
 VARIABLES
      filmes, salas,
      salaHasCapacidade, salaHasHorarios, sessao
+     , ingressos_vendidos
 
 INVARIANT
      filmes <: FILME
      & salas <: SALA
      & salaHasCapacidade : salas --> 1..10
      & salaHasHorarios : salas <-> HORARIO
-     & sessao : salas * HORARIO >+> filmes
+     & sessao : salas * HORARIO +-> filmes
+     & ingressos_vendidos : salas * HORARIO +-> 0..maxCapacidade
          
      //COLOCAR ABAIXO AS REGRAS DE NEGOCIO
      //uma sala so pode ficar disponivel no maximo em 2 turnos
      &!ss .( (ss:SALA => card({ss} <| salaHasHorarios) <=2))
+     
+       //Um filme só pode estar em uma sala por horário
+     & !ff .(ff : FILME => !hh .(hh : HORARIO => 
+       card({ss | ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh)= ff}) 
+             <= 1))
+
+
      
 INITIALISATION
     filmes := {}
@@ -36,6 +41,7 @@ INITIALISATION
     || salaHasCapacidade := {} 
     || salaHasHorarios :={} 
     || sessao := {}
+    || ingressos_vendidos := {}
     
 OPERATIONS
     AdicionarFilme(ff) =
@@ -70,8 +76,18 @@ OPERATIONS
        & ss:salas & ff:filmes 
        & ss|->hh : salaHasHorarios 
        & ss|->hh /: dom(sessao)
+       & !s2 .(s2 : SALA & (s2 |-> hh) : dom(sessao) => sessao(s2 |-> hh) /= ff)
     THEN
-       sessao := sessao \/ {(ss|->hh)|->ff}
+       sessao := sessao \/ {(ss|->hh)|->ff} 
+       ||       ingressos_vendidos:= ingressos_vendidos \/ {(ss|->hh)|->0} 
+    END;
+   ComprarIngresso(ss,hh)=
+    PRE
+       ss: SALA 
+       & hh: HORARIO 
+       & ss: salas 
+    THEN
+       ingressos_vendidos(ss|->hh) := ingressos_vendidos(ss|->hh) +1
     END
-    
+  
 END
