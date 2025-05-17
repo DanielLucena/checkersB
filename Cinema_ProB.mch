@@ -8,18 +8,18 @@ EXTENDS Cinema
     
 CONSTANTS
     /*SALA*/
-    SALA1, SALA2
+    VIP, tradicional
     
     /*FILME*/
-    ,vigadores, homem_aranha
+    ,vingadores, homem_aranha
 PROPERTIES
-    SALA1: SALA & SALA2: SALA
-    & SALA={SALA1,SALA2} 
+    VIP: SALA & tradicional: SALA
+    & SALA={VIP,tradicional} 
     & card(SALA) = 2
     
     
-    & vigadores:FILME & homem_aranha:FILME
-    & FILME={vigadores, homem_aranha}
+    & vingadores:FILME & homem_aranha:FILME
+    & FILME={vingadores, homem_aranha}
     & card(FILME) = 2
 
 END

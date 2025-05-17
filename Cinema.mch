@@ -15,6 +15,7 @@ VARIABLES
      filmes, salas,
      salaHasCapacidade, salaHasHorarios, sessao
      , ingressos_vendidos
+     , ingressos_meia
 
 INVARIANT
      filmes <: FILME
@@ -22,7 +23,9 @@ INVARIANT
      & salaHasCapacidade : salas --> 1..10
      & salaHasHorarios : salas <-> HORARIO
      & sessao : salas * HORARIO +-> filmes
-     & ingressos_vendidos : salas * HORARIO +-> 0..maxCapacidade
+//     & ingressos_vendidos : salas * HORARIO +-> 0..maxCapacidade
+     & ingressos_vendidos : (salaHasHorarios) +-> 0..maxCapacidade
+     & ingressos_meia : (salaHasHorarios) +-> 0..(maxCapacidade/2)
          
      //COLOCAR ABAIXO AS REGRAS DE NEGOCIO
      //uma sala so pode ficar disponivel no maximo em 2 turnos
@@ -33,6 +36,16 @@ INVARIANT
        card({ss | ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh)= ff}) 
              <= 1))
 
+        //O número de ingressos vendidos para uma sessão não pode ultrapassar a capacidade da sala vinculada a ela
+        & !(ss, hh) . 
+        (ss:SALA & hh:HORARIO & (ss|->hh):dom(ingressos_vendidos) =>     
+            ingressos_vendidos(ss|->hh) <= salaHasCapacidade(ss))
+        
+        //O número de ingressos vendidos como meia entrada para uma sessão não pode ultrapassar mais da metade da capacidade da sala vinculada a esta sessão
+        & !(ss, hh) . 
+        (ss:SALA & hh:HORARIO & (ss|->hh):dom(ingressos_meia) =>     
+            ingressos_meia(ss|->hh) <= (salaHasCapacidade(ss)/2))
+        
 
      
 INITIALISATION
@@ -42,6 +55,7 @@ INITIALISATION
     || salaHasHorarios :={} 
     || sessao := {}
     || ingressos_vendidos := {}
+    || ingressos_meia := {}
     
 OPERATIONS
     AdicionarFilme(ff) =
@@ -80,22 +94,32 @@ OPERATIONS
     THEN
        sessao := sessao \/ {(ss|->hh)|->ff} 
        ||       ingressos_vendidos:= ingressos_vendidos \/ {(ss|->hh)|->0} 
+       || ingressos_meia := ingressos_meia \/ {(ss|->hh)|->0}
     END;
-   ComprarIngresso(ff,hh)=
+    
+    
+    
+   ComprarIngresso(ff,hh,tt)=
     PRE
-//       ss: SALA 
         ff: FILME
        & hh: HORARIO 
-//       & ss: salas
-       & #(ss).(ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)) 
-//       &(ss |-> hh) : dom(sessao)
-//       & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)
-     
+       & tt: TIPO_INGRESSO
+       & #(ss).
+       (ss : SALA 
+           & (ss |-> hh) : dom(sessao) 
+           & sessao(ss |-> hh) = ff 
+           & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss) 
+           & (tt=meia => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
+           )   
     THEN
     ANY ss
     WHERE ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff
     THEN
        ingressos_vendidos(ss|->hh) := ingressos_vendidos(ss|->hh) +1
+       || IF tt=meia
+       THEN ingressos_meia(ss|->hh) := ingressos_meia(ss|->hh) +1
+       ELSE skip
+           END
        END
     END
   
