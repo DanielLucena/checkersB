@@ -57,6 +57,12 @@ INVARIANT
         & !(ss, hh) . 
         (ss:SALA & hh:HORARIO & (ss|->hh):dom(ingressos_meia) =>     
             ingressos_meia(ss|->hh) <= (salaHasCapacidade(ss)/2))
+        //toda sessao deve estar tambem relacionada a quantidade de ingressos_vendidos e quantidade de ingressos_meia
+        & !(ss, hh) .
+        ((ss:SALA & hh:HORARIO & (ss|->hh):dom(sessao)) =>     
+            ((ss|->hh):dom(ingressos_vendidos) 
+                & (ss|->hh):dom(ingressos_meia))
+        )
         
 
      
@@ -188,6 +194,53 @@ OPERATIONS
            END
        END
     END;
+    
+    ii<--ConsultarIngressosDisponiveisPorSessao(ss,hh)=
+    PRE ss:SALA & hh:HORARIO 
+       & ss:salas & ss|->hh : salaHasHorarios 
+       & ss|->hh : dom(sessao)
+       & ss|->hh : dom(ingressos_vendidos)
+    THEN ii := salaHasCapacidade(ss) - ingressos_vendidos(ss,hh)
+    END;
+    
+    ii<--ConsultarIngressosCompradosPorSessao(ss,hh)=
+    PRE ss:SALA & hh:HORARIO 
+       & ss:salas & ss|->hh : salaHasHorarios 
+       & ss|->hh : dom(sessao)
+       & ss|->hh : dom(ingressos_vendidos)
+    THEN ii := ingressos_vendidos(ss,hh)
+    END;
+    
+    rr<--visualizarFilmesEmCartaz=
+    BEGIN rr:=ran(sessao)
+    END;
+    
+     rr <-- VisualizarHorariosPorFilme(ff) =
+   PRE 
+       ff : FILME & ff : filmes
+   THEN
+       ANY hs WHERE
+           hs : POW(HORARIO) &
+           hs = {hh | hh : HORARIO & 
+                      #(ss).(ss : salas & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff)}
+       THEN
+           rr := hs
+       END
+   END;
+    
+   rr <-- VisualizarFilmesPorHorario(hh) =
+   PRE 
+       hh : HORARIO
+   THEN
+       ANY fs WHERE
+           fs : POW(filmes) &
+           fs = {ff | ff : filmes & 
+                      #(ss).(ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff)}
+       THEN
+           rr := fs
+       END
+   END;
+        
       
     Passar_Turno =
       BEGIN
