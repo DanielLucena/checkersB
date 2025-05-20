@@ -21,17 +21,21 @@ VARIABLES
      , ingressos_vendidos
      , ingressos_meia
      ,turno
+     ,horarios
 
 INVARIANT
      filmes <: FILME
+     & filmes : FIN(FILME)
      & salas <: SALA
+     & horarios: iseq(HORARIO)
+     & horarios: FIN(horarios)
      & salaHasCapacidade : salas --> 1..10
      & salaHasHorarios : salas <-> HORARIO
      & sessao : salas * HORARIO +-> filmes
 //     & ingressos_vendidos : salas * HORARIO +-> 0..maxCapacidade
      & ingressos_vendidos : (salaHasHorarios) +-> 0..maxCapacidade
      & ingressos_meia : (salaHasHorarios) +-> 0..(maxCapacidade/2)
-     & turno : HORARIO
+     & turno : NAT1
          
      //COLOCAR ABAIXO AS REGRAS DE NEGOCIO
      //uma sala so pode ficar disponivel no maximo em 2 turnos
@@ -57,12 +61,16 @@ INVARIANT
         & !(ss, hh) . 
         (ss:SALA & hh:HORARIO & (ss|->hh):dom(ingressos_meia) =>     
             ingressos_meia(ss|->hh) <= (salaHasCapacidade(ss)/2))
+        
+        //ingressos_meia <= ingressos_vendidos
+        
         //toda sessao deve estar tambem relacionada a quantidade de ingressos_vendidos e quantidade de ingressos_meia
         & !(ss, hh) .
         ((ss:SALA & hh:HORARIO & (ss|->hh):dom(sessao)) =>     
             ((ss|->hh):dom(ingressos_vendidos) 
                 & (ss|->hh):dom(ingressos_meia))
         )
+        
         
 
      
@@ -74,25 +82,37 @@ INITIALISATION
     || sessao := {}
     || ingressos_vendidos := {}
     || ingressos_meia := {}
-    || turno := manha
+    || turno := 1
+    || horarios := {(1|->manha),(2|->tarde),(3|->noite)}
     
 OPERATIONS
     AdicionarFilme(ff) =
     PRE
-        ff : FILME & ff /: filmes & card(filmes \/ {ff}) <=20
+        ff : FILME & ff /: filmes & card(filmes) <20
     THEN
         filmes := filmes \/ {ff}
     END;
     
     RemoverFilme(ff) =
     PRE
-       ff: FILME & ff:filmes & card (sessao |> {ff}) = 0
+       ff: FILME & ff:filmes 
+//       & card (sessao |> {ff}) = 0
+& sessao |> {ff} = {}
+& filmes = ran(sessao) - {ff}
     THEN
        filmes := filmes - {ff}
     END;
     
     ff <--QueryFilmes =
-    BEGIN ff:= filmes END ;
+    PRE filmes /= {}
+    THEN
+        ANY ss WHERE
+            ss : seq(FILME) & ran(ss) = filmes & card(ss) = card(filmes)
+        THEN
+            ff := ss
+        END
+    END;
+    
     
 
 
@@ -125,6 +145,7 @@ OPERATIONS
        ss:SALA & ss: salas 
        & hh:HORARIO & {ss|->hh} /\ salaHasHorarios ={} 
        & card({ss} <| salaHasHorarios) +1 <=2
+       & hh: ran(horarios)
     THEN
        salaHasHorarios := {ss|->hh} \/ salaHasHorarios
     END;
@@ -182,7 +203,9 @@ OPERATIONS
            & sessao(ss |-> hh) = ff 
            & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss) 
            & (tt=meia => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
-           )   
+       )
+       & hh: ran(horarios)
+       & horarios~(hh) >= turno
     THEN
     ANY ss
     WHERE ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff
@@ -243,14 +266,26 @@ OPERATIONS
         
       
     Passar_Turno =
-      BEGIN
-          IF turno = manha THEN
-              turno := tarde
-          ELSIF turno = tarde THEN
-              turno := noite
-          ELSE
-              turno := manha
+      PRE  horarios /= {} & turno < card(horarios)
+      THEN turno := turno + 1
           END
+      ;
+      
+//      adicionar_horario(hh)=
+//          PRE hh : HORARIO & hh /: ran(horarios)
+//          THEN horarios := horarios <- hh
+//      END;
+      
+      Passar_Dia=
+      PRE turno = card(horarios)
+          THEN turno := 1
+          || ingressos_vendidos := dom(ingressos_vendidos)*{0}
+          || ingressos_meia := dom(ingressos_meia)*{0}
       END
+      
+      
+      
+      
+      
   
 END

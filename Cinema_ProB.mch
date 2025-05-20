@@ -11,15 +11,15 @@ CONSTANTS
     VIP, tradicional
     
     /*FILME*/
-    ,vingadores, homem_aranha
+    ,vingadores, homem_aranha, god_father
 PROPERTIES
     VIP: SALA & tradicional: SALA
     & SALA={VIP,tradicional} 
     & card(SALA) = 2
     
     
-    & vingadores:FILME & homem_aranha:FILME
-    & FILME={vingadores, homem_aranha}
-    & card(FILME) = 2
+    & vingadores:FILME & homem_aranha:FILME & god_father:FILME
+    & FILME={vingadores, homem_aranha,god_father}
+    & card(FILME) = 3
 
 END
