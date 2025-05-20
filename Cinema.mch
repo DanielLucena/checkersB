@@ -6,10 +6,19 @@ MACHINE
     Cinema
     
 CONSTANTS
-   maxCapacidade
+   maxCapacidade, limit_salas, limit_filmes
    
 PROPERTIES
-   maxCapacidade = 10
+   //valores das contantes
+     maxCapacidade = 10 
+   & limit_salas = 7
+   & limit_filmes = 20
+   
+
+   
+   
+   
+   
 SETS
     SALA
     ;HORARIO = {manha,tarde,noite}
@@ -27,9 +36,11 @@ INVARIANT
      filmes <: FILME
      & filmes : FIN(FILME)
      & salas <: SALA
+     & salas : FIN(SALA)
      & horarios: iseq(HORARIO)
      & horarios: FIN(horarios)
-     & salaHasCapacidade : salas --> 1..10
+     & salaHasCapacidade : salas --> 1..maxCapacidade
+     & dom(salaHasCapacidade) = salas
      & salaHasHorarios : salas <-> HORARIO
      & sessao : salas * HORARIO +-> filmes
 //     & ingressos_vendidos : salas * HORARIO +-> 0..maxCapacidade
@@ -42,10 +53,10 @@ INVARIANT
      &!ss .( (ss:SALA => card({ss} <| salaHasHorarios) <=2))
      
      // So podem exister ate 7 salas
-     & card(salas) <= 7
+     & card(salas) <= limit_salas
      
      //So podem exister cadastrados ate 20 filmes
-     & card(filmes) <=20
+     & card(filmes) <= limit_filmes
      
        //Um filme só pode estar em uma sala por horário
      & !ff .(ff : FILME => !hh .(hh : HORARIO => 
@@ -70,6 +81,8 @@ INVARIANT
             ((ss|->hh):dom(ingressos_vendidos) 
                 & (ss|->hh):dom(ingressos_meia))
         )
+        
+        //turno tem que ser menor do que a quantidade de horarios
         
         
 
@@ -118,26 +131,35 @@ OPERATIONS
 
     AdicionarSala(ss,tt)=
     PRE
-       ss : SALA & ss /: salas & card(salas \/ {ss}) <= 10
-       & tt : NAT & tt <=10 
-       & tt > 0 
+       ss : SALA & ss /: salas & card(salas) < limit_salas
+       & tt : NAT1 & tt <= maxCapacidade
+//       & tt > 0 
     THEN
        salas := salas \/ {ss} 
-       || salaHasCapacidade := {ss |-> tt} \/ salaHasCapacidade
+       || salaHasCapacidade(ss) := tt
+//           := salaHasCapacidade \/ {ss |-> tt}
     END;
     
     RemoverSala(ss)=
     PRE
        ss : SALA & ss : salas 
-       & card({ss} <| salaHasHorarios) =0
-       
+       & {ss} <| salaHasHorarios = {}
     THEN
        salas := salas - {ss} 
        || salaHasCapacidade := {ss } <<| salaHasCapacidade
     END;
     
-    ss <--QuerySalas =
-    BEGIN ss := salas END;
+    ff <--QuerySalas =
+    PRE salas /= {}
+    THEN
+        ANY ss WHERE 
+            ss : seq(SALA) & ran(ss) = salas 
+            & card(ss) = card(salas)
+        THEN 
+            ff := ss
+        END
+    END;
+           
     
      
     DisponibilizarSalaEmHorarios(ss,hh) = 

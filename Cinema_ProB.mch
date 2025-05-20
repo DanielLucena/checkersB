@@ -21,5 +21,9 @@ PROPERTIES
     & vingadores:FILME & homem_aranha:FILME & god_father:FILME
     & FILME={vingadores, homem_aranha,god_father}
     & card(FILME) = 3
+    
+//    &maxCapacidade = 10
+//    &limit_salas = 7
+//    &limit_filmes = 20
 
 END
