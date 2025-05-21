@@ -13,8 +13,7 @@ PROPERTIES
      limit_capacidade = 10
    & limit_salas = 5
    & limit_filmes = 10
-   & limit_turnos = 2
-   
+   & limit_turnos = 2  
    
 SETS
     SALA
@@ -82,8 +81,7 @@ INVARIANT
                 <= ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
             )
 
-       
-     
+         
 INITIALISATION
     filmes := {}
     || salas :={} 
@@ -97,6 +95,7 @@ INITIALISATION
     || ingressos_ofertados := {}
     
 OPERATIONS
+    // Filmes
     AdicionarFilme(ff) =
     PRE
         ff : FILME & ff /: filmes & card(filmes) < limit_filmes
@@ -117,13 +116,13 @@ OPERATIONS
     PRE filmes /= {}
     THEN
         ANY ss WHERE
-            ss : seq(FILME) & ran(ss) = filmes 
+            ss : iseq(FILME) & ran(ss) = filmes 
         THEN
             ff := ss
         END
     END;
     
-
+    //Sala
     AdicionarSala(ss,tt)=
     PRE
        ss : SALA & ss /: salas & card(salas) < limit_salas
@@ -152,7 +151,7 @@ OPERATIONS
         END
     END;       
     
-     
+    //SalaHasHorario 
     DisponibilizarSalaEmHorarios(ss,hh) = 
     PRE
        ss:SALA & ss: salas 
@@ -174,7 +173,7 @@ OPERATIONS
        salaHasHorarios := salaHasHorarios - {ss|->hh}
     END;
       
-    
+    // Sessao
     AdicionarSessao(ss, hh, ff) = 
     PRE
        ss:SALA & hh: HORARIO & ff: FILME
@@ -189,7 +188,6 @@ OPERATIONS
        || ingressos_ofertados := ingressos_ofertados 
            \/ {((ss|->hh)|->ff)|-> salaHasCapacidade(ss)}
     END;
-    
     
     RemoverSessao(ss,hh) =
     PRE
@@ -215,7 +213,7 @@ OPERATIONS
         END
     END;
 
-    
+    // Ingresso
    ComprarIngresso(ff,hh,tt)=
     PRE
         ff: FILME
@@ -226,7 +224,6 @@ OPERATIONS
            & (ss |-> hh) : dom(sessao) 
            & sessao(ss |-> hh) = ff 
            & ingressos_vendidos((ss|->hh)|->ff ) < salaHasCapacidade(ss)
-           //TODO: verificar se deve mesmo ser uma implicação
            & (tt=meia => ingressos_meia((ss|->hh)|->ff) < (salaHasCapacidade(ss)/2))
        )
        & hh: ran(horarios)
@@ -236,12 +233,28 @@ OPERATIONS
     WHERE ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff
     THEN
        ingressos_vendidos((ss|->hh)|->ff) := ingressos_vendidos((ss|->hh)|->ff) +1
-       || IF tt=meia
+       || 
+       IF tt=meia
        THEN ingressos_meia((ss|->hh)|->ff) := ingressos_meia((ss|->hh)|->ff) +1
        ELSE skip
            END
        END
     END;
+    
+     //Passagem de temp
+     Passar_Turno =
+      PRE  horarios /= {} & turno < card(horarios)
+      THEN turno := turno + 1
+      END;
+      
+      Passar_Dia=
+      PRE turno = card(horarios)
+          THEN turno := 1
+          || ingressos_vendidos := dom(ingressos_vendidos)*{0}
+          || ingressos_meia := dom(ingressos_meia)*{0}
+      END;
+      
+      //Querrys mais complexas
     
     ii<--ConsultarIngressosDisponiveisPorSessao(ss,hh)=
     PRE ss:SALA & hh:HORARIO 
@@ -270,24 +283,6 @@ OPERATIONS
         END
     END;
     
-    //TODO: verificar se ta ok
-     rr <-- VisualizarHorariosPorFilme(ff) =
-   PRE 
-       ff : FILME & ff : filmes
-   THEN
-       ANY hs WHERE
-           hs : iseq(HORARIO) &
-           ran(hs) = {hh | hh : HORARIO &
-                           #(ss).(ss : salas &
-                                  (ss |-> hh) : dom(sessao) &
-                                  sessao(ss |-> hh) = ff)} 
-       THEN
-           rr := hs
-       END
-   END;
-   
-    
-   //TODO: verificar se ta ok
    rr <-- VisualizarFilmesPorHorario(hh) =
    PRE 
        hh : HORARIO
@@ -301,21 +296,19 @@ OPERATIONS
            rr := fs
        END
    END;
-  
-      
-    Passar_Turno =
-      PRE  horarios /= {} & turno < card(horarios)
-      THEN turno := turno + 1
-      END;
-      
-      
-      Passar_Dia=
-      PRE turno = card(horarios)
-          THEN turno := 1
-          || ingressos_vendidos := dom(ingressos_vendidos)*{0}
-          || ingressos_meia := dom(ingressos_meia)*{0}
-      END
-      
-  
+    
+     rr <-- VisualizarHorariosPorFilme(ff) =
+   PRE 
+       ff : FILME & ff : filmes
+   THEN
+       ANY hs WHERE
+           hs : iseq(HORARIO) &
+           ran(hs) = {hh | hh : HORARIO &
+                           #(ss).(ss : salas &
+                                  (ss |-> hh) : dom(sessao) &
+                                  sessao(ss |-> hh) = ff)} 
+       THEN
+           rr := hs
+       END
+   END
 END
-
