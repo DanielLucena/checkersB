@@ -33,59 +33,86 @@ VARIABLES
      ,horarios
 
 INVARIANT
-     filmes <: FILME
-     & filmes : FIN(FILME)
-     & salas <: SALA
-     & salas : FIN(SALA)
-     & horarios: iseq(HORARIO)
-     & horarios: FIN(horarios)
-     & salaHasCapacidade : salas --> 1..maxCapacidade
-     & dom(salaHasCapacidade) = salas
-     & salaHasHorarios : salas <-> HORARIO
-     & sessao : salas * HORARIO +-> filmes
-//     & ingressos_vendidos : salas * HORARIO +-> 0..maxCapacidade
-     & ingressos_vendidos : (salaHasHorarios) +-> 0..maxCapacidade
-     & ingressos_meia : (salaHasHorarios) +-> 0..(maxCapacidade/2)
-     & turno : NAT1
+    
+    //1. Invariantes de filmes
+         //filmes são um subconjunto de FILME
+         filmes <: FILME
+         //filmes sao um conjunto finito de FILME
+         & filmes : FIN(FILME)
+         //So podem exister cadastrados ate 20 filmes
+         & card(filmes) <= limit_filmes
          
-     //COLOCAR ABAIXO AS REGRAS DE NEGOCIO
-     //uma sala so pode ficar disponivel no maximo em 2 turnos
-     &!ss .( (ss:SALA => card({ss} <| salaHasHorarios) <=2))
-     
-     // So podem exister ate 7 salas
-     & card(salas) <= limit_salas
-     
-     //So podem exister cadastrados ate 20 filmes
-     & card(filmes) <= limit_filmes
-     
-       //Um filme só pode estar em uma sala por horário
-     & !ff .(ff : FILME => !hh .(hh : HORARIO => 
-       card({ss | ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh)= ff}) 
-             <= 1))
-
-        //O número de ingressos vendidos para uma sessão não pode ultrapassar a capacidade da sala vinculada a ela
+     //2. Invariantes de salas
+         //salas são um subconjunto de SALA
+         & salas <: SALA
+         //salas são um conjunto finito de SALA
+         & salas : FIN(SALA)
+         // So podem exister ate 7 salas
+         & card(salas) <= limit_salas
+         //a função salaHasCapacidade mapeia salas a uma capacidade
+         //essa capacidade deve estar entre 1 e maxCapacidade
+         & salaHasCapacidade : salas --> 1..maxCapacidade
+         //todos os elementos de salas tem que estar mapeados
+         //a uma capacidade
+         & dom(salaHasCapacidade) = salas
+         
+     //3. Invariantes de horarios
+         //horarios é uma sequencia injetiva de HORARIO
+         & horarios: iseq(HORARIO)
+         //horarios é um conjunto finito
+         & horarios: FIN(horarios)
+         //turno armazena um indicie de horarios 
+         // que marca o horario atual
+         & turno : NAT1
+         //turno tem que ser menor do que a quantidade de horarios
+         & turno <= card(horarios)
+         
+     //4. Invariantes de salaHasHorarios
+         //salaHasHorarios é uma relação ente salas e HORARIO
+         & salaHasHorarios : salas <-> HORARIO
+         //uma sala so pode ficar disponivel no maximo em 2 turnos
+         &!ss .( (ss:SALA => card({ss} <| salaHasHorarios) <=2))
+         
+     //5. Invarintes de sessão
+         //a função sessao mapeia pares de (salas,HORARIO) a filmes
+         //cada par de sala e horario so pode estar ligado a um filme
+         //um par de sala e horario pode sem nenhum filme associado
+         & sessao : salas * HORARIO +-> filmes
+         //a função ingressos_vendidos mapeia um par(salas,HORARIO)
+         //a uma quantidade de ingressos vendidos 
+         //ente 0 e maxCapacidade
+         & ingressos_vendidos : (salaHasHorarios) +-> 0..maxCapacidade
+         //a função ingressos_meia mapeia um par(salas,HORARIO)
+         //a uma quantidade de ingressos do tipo meia vendidos 
+         //ente 0 e metade de maxCapacidade
+         & ingressos_meia : (salaHasHorarios) +-> 0..(maxCapacidade/2)
+         //Um filme só pode estar em uma sala por horário
+         & !ff .(ff : FILME => !hh .(hh : HORARIO => 
+         card({ss | ss : SALA 
+              & (ss |-> hh) : dom(sessao) 
+              & sessao(ss |-> hh)= ff}
+              ) <= 1))
+         //toda sessao deve estar tambem relacionada a quantidade de
+         //ingressos_vendidos e quantidade de ingressos_meia
+         & !(ss, hh) .
+         ((ss:SALA & hh:HORARIO & (ss|->hh):dom(sessao)) =>     
+            ((ss|->hh):dom(ingressos_vendidos) 
+                & (ss|->hh):dom(ingressos_meia)))
+        
+    //6. Invariantes de ingressos
+        //O número de ingressos vendidos para uma sessão não pode
+        //ultrapassar a capacidade da sala vinculada a ela
         & !(ss, hh) . 
         (ss:SALA & hh:HORARIO & (ss|->hh):dom(ingressos_vendidos) =>     
             ingressos_vendidos(ss|->hh) <= salaHasCapacidade(ss))
-        
-        //O número de ingressos vendidos como meia entrada para uma sessão não pode ultrapassar mais da metade da capacidade da sala vinculada a esta sessão
+        //O número de ingressos vendidos como meia entrada para uma 
+        //sessão não pode ultrapassar mais da metade da capacidade da 
+        //sala vinculada a esta sessão
         & !(ss, hh) . 
         (ss:SALA & hh:HORARIO & (ss|->hh):dom(ingressos_meia) =>     
             ingressos_meia(ss|->hh) <= (salaHasCapacidade(ss)/2))
-        
         //ingressos_meia <= ingressos_vendidos
-        
-        //toda sessao deve estar tambem relacionada a quantidade de ingressos_vendidos e quantidade de ingressos_meia
-        & !(ss, hh) .
-        ((ss:SALA & hh:HORARIO & (ss|->hh):dom(sessao)) =>     
-            ((ss|->hh):dom(ingressos_vendidos) 
-                & (ss|->hh):dom(ingressos_meia))
-        )
-        
-        //turno tem que ser menor do que a quantidade de horarios
-        
-        
-
+        & 1=1 //TODO
      
 INITIALISATION
     filmes := {}
