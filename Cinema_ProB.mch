@@ -42,8 +42,10 @@ PROPERTIES
     }
     & card(FILME) = 10
     
-//    &maxCapacidade = 10
-//    &limit_salas = 7
-//    &limit_filmes = 20
+   & limit_capacidade = 10
+   & limit_salas = 5
+   & limit_filmes = 10
+   & limit_turnos = 2
+   & horario_max = 24
 
 END
