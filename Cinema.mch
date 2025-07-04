@@ -123,8 +123,8 @@ OPERATIONS
     PRE filmes /= {}
     THEN
         ANY ss WHERE
-            ss : 0..card(filmes)-1 +->FILME
-            & ran(ss) = filmes
+            ss : FILME --> BOOL
+            & dom(ss|> {TRUE}) = filmes
             
         THEN
             ff := ss
@@ -152,12 +152,12 @@ OPERATIONS
     
     //CORRECAO: Remover tipos abstratos da assinatura das operações
     //Solucao: trocar sequencia por array
-    ff <-- QuerySalas =
+     ff <-- QuerySalas =
     PRE salas /= {}
     THEN
         ANY ss WHERE 
-            ss : 0..card(salas)-1 +-> SALA &
-            ran(ss) = salas
+            ss : SALA --> BOOL 
+            & dom(ss|> {TRUE}) = salas
         THEN 
             ff := ss
         END

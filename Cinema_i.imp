@@ -13,15 +13,15 @@ VALUES //valores para os SETs
     limit_filmes = 10;
     limit_turnos = 2;
     horario_max = 24;
-    SALA = 0..4;
-    FILME = 0..9;
+    SALA = 0..4; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
+    FILME = 0..9; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
     HORARIO = 0..horario_max
     
     
 
 CONCRETE_VARIABLES
-    filmes_i, hwf
-    ,salas_i, hws
+    filmes_i
+    ,salas_i
     ,salaHasCapacidade_i
 //     filmes, salas,
 //     salaHasCapacidade, salaHasHorarios, sessao
@@ -34,24 +34,20 @@ CONCRETE_VARIABLES
 //     ,acentos_sessao
 
 INVARIANT
-    filmes_i: (0..limit_filmes) --> FILME
-//    0..card(filmes)-1 +->FILME
-    
-    & hwf: -1..limit_filmes
-    & filmes_i[0..hwf] = filmes
+
+    filmes_i: FILME --> BOOL
+    & filmes = dom(filmes_i |> {TRUE})
     
     
-    & salas_i: (0..limit_salas)--> SALA
-    & hws: -1..limit_salas
+    & salas_i: SALA --> BOOL
+    & salas = dom(salas_i |> {TRUE})
     
     & salaHasCapacidade_i: SALA --> 0..limit_capacidade
 
 INITIALISATION
-    filmes_i := (0..limit_filmes)*{0};
-    hwf:= -1;
-    
-    salas_i := (0..limit_salas)*{0};
-    hws:= -1;
+    filmes_i := FILME*{FALSE};
+    salas_i := SALA*{FALSE};
+
     
     salaHasCapacidade_i := SALA*{0}
     
@@ -69,46 +65,64 @@ INITIALISATION
 
 OPERATIONS
     AdicionarFilme(ff) =
-//    skip;
-        BEGIN
-            IF hwf < limit_filmes
-            THEN hwf := hwf + 1;
-                 filmes_i(hwf) := ff
-            END
-        END;
+        filmes_i(ff) := TRUE; 
         
 
     
     RemoverFilme(ff) =
-//    skip;
-        BEGIN
-            IF hwf >=0
-            THEN hwf := hwf - 1
-            END
-        END;
+        filmes_i(ff) := FALSE;
    
 
     
     ff <--QueryFilmes =
-//    skip;
     BEGIN
-        IF hwf > 0
-        THEN ff := filmes_i
-        END
+       VAR ii IN
+            ii := 0;
+           WHILE ii < limit_filmes DO
+               ff(ii) := filmes_i(ii);
+               ii := ii + 1
+           INVARIANT
+               ii: 0..limit_filmes
+               & ii: dom(filmes_i)
+               & ff: 0..limit_filmes-1 --> BOOL
+           VARIANT
+               limit_filmes - ii
+           END
+       END
+       
+               
     END;
-    
-
     
     //Sala
     AdicionarSala(ss,tt)=
-     skip;
+      BEGIN
+           salas_i(ss) := TRUE;
+           salaHasCapacidade_i(ss) := tt
+        END;
 
     
     RemoverSala(ss)=
-    skip;
+        BEGIN
+           salas_i(ss) := FALSE
+        END;
 
     ff <--QuerySalas =
-    skip;
+    BEGIN
+    VAR cc IN
+       cc:=0;
+       WHILE cc < limit_salas DO
+          ff(cc) := salas_i(cc);
+          cc := cc+1
+       INVARIANT
+          cc:0..limit_salas
+          &cc:dom(salas_i)
+          &ff: 0..limit_salas-1 --> BOOL
+
+       VARIANT 
+          limit_salas - cc
+       END
+    END
+    END;
     
        
     
@@ -161,27 +175,8 @@ OPERATIONS
    
    ok<-- pre_adicionarFilme(ff) =
 //    skip;
-    IF hwf >= limit_filmes
-    THEN
-        ok := FALSE
-    ELSE 
-        VAR ii IN
-            ii:=0;
-            WHILE ii < limit_filmes
-                DO
-                    IF filmes_i(ii) = ff
-                    THEN ok := TRUE
-                    END
-                INVARIANT 
-                    ii:0..limit_filmes
-                VARIANT
-                    limit_filmes - ii
-            END
-        END
-        
-                
-                    
-    END;
+       ok := filmes_i(ff);
+       
     
    
    ok <-- pre_removerFilme(ff) =
