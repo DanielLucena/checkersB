@@ -1,0 +1,240 @@
+/* Cinema_i
+ * Author: daniel
+ * Creation date: 25/06/2025
+ */
+
+IMPLEMENTATION Cinema_i
+    
+REFINES Cinema
+    
+VALUES //valores para os SETs
+    limit_capacidade = 10;
+    limit_salas = 5;
+    limit_filmes = 10;
+    limit_turnos = 2;
+    horario_max = 24;
+    SALA = 0..4;
+    FILME = 0..9;
+    HORARIO = 0..horario_max
+    
+    
+
+CONCRETE_VARIABLES
+    filmes_i, hwf
+    ,salas_i, hws
+    ,salaHasCapacidade_i
+//     filmes, salas,
+//     salaHasCapacidade, salaHasHorarios, sessao
+//     ,ingressos_vendidos
+//     ,ingressos_meia
+//     //CORRECAO: Remover conceito de turno 
+//     //e inserir conceito de hora
+//     ,horaAtual
+//     //CORRECAO: remover variavel ingressos_ofertados 
+//     ,acentos_sessao
+
+INVARIANT
+    filmes_i: (0..limit_filmes) --> FILME
+//    0..card(filmes)-1 +->FILME
+    
+    & hwf: -1..limit_filmes
+    & filmes_i[0..hwf] = filmes
+    
+    
+    & salas_i: (0..limit_salas)--> SALA
+    & hws: -1..limit_salas
+    
+    & salaHasCapacidade_i: SALA --> 0..limit_capacidade
+
+INITIALISATION
+    filmes_i := (0..limit_filmes)*{0};
+    hwf:= -1;
+    
+    salas_i := (0..limit_salas)*{0};
+    hws:= -1;
+    
+    salaHasCapacidade_i := SALA*{0}
+    
+//    || filmes :={}
+//    || salas :={} 
+//    || salaHasCapacidade := {} 
+//    || salaHasHorarios :={} 
+//    || sessao := {}
+//    || ingressos_vendidos := {}
+//    || ingressos_meia := {}
+//    || horaAtual := 0
+//    || acentos_sessao := {}
+
+    
+
+OPERATIONS
+    AdicionarFilme(ff) =
+//    skip;
+        BEGIN
+            IF hwf < limit_filmes
+            THEN hwf := hwf + 1;
+                 filmes_i(hwf) := ff
+            END
+        END;
+        
+
+    
+    RemoverFilme(ff) =
+//    skip;
+        BEGIN
+            IF hwf >=0
+            THEN hwf := hwf - 1
+            END
+        END;
+   
+
+    
+    ff <--QueryFilmes =
+//    skip;
+    BEGIN
+        IF hwf > 0
+        THEN ff := filmes_i
+        END
+    END;
+    
+
+    
+    //Sala
+    AdicionarSala(ss,tt)=
+     skip;
+
+    
+    RemoverSala(ss)=
+    skip;
+
+    ff <--QuerySalas =
+    skip;
+    
+       
+    
+    //SalaHasHorario 
+    DisponibilizarSalaEmHorarios(ss,hh)= 
+    skip;
+    
+   
+    IndisponibilizarSalaEmHorarios(ss,hh) =
+     skip;
+
+      
+    // Sessao
+    AdicionarSessao(ss, hh, ff) = 
+    skip ;
+
+    
+    RemoverSessao(ss,hh) =
+     skip;
+
+    vv <-- QuerySessao =
+    skip;
+
+
+    // Ingresso
+   ComprarIngresso(ff,hh,tt,aa)=
+    skip;
+
+    
+     //Passagem de temp
+     Passar_Hora =
+     skip;
+    
+    ii<--ConsultarIngressosDisponiveisPorSessao(ss,hh)=
+     skip;
+    
+    ii<--ConsultarIngressosCompradosPorSessao(ss,hh)=
+     skip;
+
+    rr <-- visualizarFilmesEmCartaz =
+    skip;
+
+   
+   rr <-- VisualizarFilmesPorHorario(hh) =
+    skip;
+
+     rr <-- VisualizarHorariosPorFilme(ff) = 
+    skip;
+
+   
+   ok<-- pre_adicionarFilme(ff) =
+//    skip;
+    IF hwf >= limit_filmes
+    THEN
+        ok := FALSE
+    ELSE 
+        VAR ii IN
+            ii:=0;
+            WHILE ii < limit_filmes
+                DO
+                    IF filmes_i(ii) = ff
+                    THEN ok := TRUE
+                    END
+                INVARIANT 
+                    ii:0..limit_filmes
+                VARIANT
+                    limit_filmes - ii
+            END
+        END
+        
+                
+                    
+    END;
+    
+   
+   ok <-- pre_removerFilme(ff) =
+    skip;
+       
+   ok<-- pre_adicionarSala(ss, tt) =
+    skip;
+   
+   ok <-- pre_removerSala(ss)= 
+    skip;
+   
+   ok <-- pre_disponibilizarSalaEmHorarios(ss, hh) =
+    skip;
+   
+   ok <-- pre_indisponibilizarSalaEmHorarios(ss, hh) =
+    skip;
+
+   
+   
+   ok <-- pre_adicionarSessao(ss, hh, ff) =
+    skip;
+   
+
+   ok <-- pre_removerSessao(ss, hh) =
+    skip;
+
+   
+   ok <-- pre_comprarIngresso(ff, hh, tt) =
+    skip;
+   
+   ok <-- pre_consultarIngressosPorSessao(ss, hh) =
+    skip;
+
+    
+   
+   
+   ok <-- pre_DisponibilizarSalaEmHorarios(ss,hh) = 
+    skip;
+   
+  
+     
+   ok <-- pre_IndisponibilizarSalaEmHorarios(ss, hh) =
+    skip;
+   
+    
+    ok <-- pre_AdicionarSessao(ss, hh, ff) =
+    skip;
+    
+    
+    ok <-- pre_RemoverSessao(ss, hh) =
+    skip
+    
+
+
+
+ END

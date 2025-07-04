@@ -235,6 +235,7 @@ OPERATIONS
        & hh: HORARIO 
        & tt: TIPO_INGRESSO
        & aa: NAT
+       & aa: 0..limit_capacidade-1
        & #(ss).
        (ss : SALA 
            & (ss |-> hh) : dom(sessao) 
