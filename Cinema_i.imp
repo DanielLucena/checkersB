@@ -23,6 +23,7 @@ CONCRETE_VARIABLES
     filmes_i
     ,salas_i
     ,salaHasCapacidade_i
+    ,salaHasHorarios_i
 //     filmes, salas,
 //     salaHasCapacidade, salaHasHorarios, sessao
 //     ,ingressos_vendidos
@@ -43,13 +44,17 @@ INVARIANT
     & salas = dom(salas_i |> {TRUE})
     
     & salaHasCapacidade_i: SALA --> 0..limit_capacidade
+    
+    & salaHasHorarios_i: SALA*HORARIO-->BOOL
+    & dom(salaHasHorarios_i |> {TRUE}) = salaHasHorarios
 
 INITIALISATION
     filmes_i := FILME*{FALSE};
     salas_i := SALA*{FALSE};
 
     
-    salaHasCapacidade_i := SALA*{0}
+    salaHasCapacidade_i := SALA*{0};
+    salaHasHorarios_i := SALA*HORARIO*{FALSE}
     
 //    || filmes :={}
 //    || salas :={} 
@@ -127,12 +132,21 @@ OPERATIONS
        
     
     //SalaHasHorario 
-    DisponibilizarSalaEmHorarios(ss,hh)= 
-    skip;
+    DisponibilizarSalaEmHorarios(ss,hh)=
+//    skip;
+    BEGIN
+        salaHasHorarios_i(ss,hh) := TRUE
+    END;
+        
+    
     
    
     IndisponibilizarSalaEmHorarios(ss,hh) =
-     skip;
+//     skip;
+    BEGIN
+        salaHasHorarios_i(ss,hh) := TRUE
+    END;
+        
 
       
     // Sessao
