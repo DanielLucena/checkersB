@@ -188,10 +188,17 @@ OPERATIONS
 
    
    ok<-- pre_adicionarFilme(ff) =
-//    skip;
-       ok := filmes_i(ff);
-       
-    
+    BEGIN
+        VAR filme IN
+            filme := filmes_i(ff);
+            IF filme = FALSE
+            THEN ok := TRUE
+            ELSE ok := FALSE
+            END
+        END
+        
+    END;
+     
    
    ok <-- pre_removerFilme(ff) =
     skip;
