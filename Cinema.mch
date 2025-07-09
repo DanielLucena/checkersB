@@ -216,16 +216,19 @@ OPERATIONS
   
      //CORRECAO: Remover tipos abstratos da assinatura das operações
     //Solucao: trocar sequencia por array
-    vv <-- QuerySessao =
-    PRE sessao /= {}
-    THEN
-        ANY ff WHERE
-            ff : 0..card(sessao)-1 +-> (SALA*HORARIO)*FILME &
-            ran(ff) = sessao
-        THEN
-            vv := ran(ff)
-        END
-    END;
+//    vv <-- QuerySessao =
+//    PRE sessao /= {}
+//    THEN
+//        ANY ff WHERE
+//            ff : 0..card(sessao)-1 +-> (SALA*HORARIO)*FILME &
+//            ran(ff) = sessao
+//        THEN
+//            vv := ran(ff)
+//        END
+//    END;
+    
+//    vv <-- QuerySessao_1 =
+//    skip;
 
 
     // Ingresso
@@ -300,8 +303,8 @@ OPERATIONS
     PRE filmes /= {}
     THEN
         ANY ss WHERE
-            ss : 0..card(ran(sessao))-1 +-> FILME &
-            ran(ss) = ran(sessao)
+            ss : FILME --> BOOL &
+            dom(ss |> {TRUE}) = ran(sessao)
         THEN
             rr := ss
         END
@@ -315,13 +318,8 @@ OPERATIONS
         hh : HORARIO
     THEN
         ANY fs WHERE
-            fs : 0..
-            card({ff | ff : filmes & 
-               #(ss).(ss : SALA & (ss |-> hh) : dom(sessao) 
-                  & sessao(ss |-> hh) = ff)}) - 1 +-> FILME 
-                  & ran(fs) = {ff | ff : filmes & 
-                    #(ss).(ss : SALA & (ss |-> hh) : dom(sessao) 
-                                        & sessao(ss |-> hh) = ff)}
+            fs: FILME --> BOOL
+            & dom(fs |> {TRUE}) = sessao[salaHasHorarios |> {hh}]
         THEN
             rr := fs
         END
@@ -337,14 +335,8 @@ OPERATIONS
         ff : FILME & ff : filmes
     THEN
         ANY hs WHERE
-            hs : 0..
-            card({hh | hh : HORARIO &
-                    #(ss).(ss : salas & (ss |-> hh) : dom(sessao) 
-                       & sessao(ss |-> hh) = ff)}) - 1 +-> HORARIO 
-                       & ran(hs) = {hh | hh : HORARIO &
-                              #(ss).(ss : salas &
-                                     (ss |-> hh) : dom(sessao) 
-                                     & sessao(ss |-> hh) = ff)}
+            hs : HORARIO --> BOOL
+            & dom(hs |> {TRUE}) = ran(dom(sessao |> {ff}))
         THEN
             rr := hs
         END

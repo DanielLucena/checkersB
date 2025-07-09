@@ -7,6 +7,8 @@ IMPLEMENTATION Cinema_i
     
 REFINES Cinema
     
+
+    
 VALUES //valores para os SETs
     limit_capacidade = 10;
     limit_salas = 5;
@@ -16,7 +18,9 @@ VALUES //valores para os SETs
     SALA = 0..4; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
     FILME = 0..9; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
     HORARIO = 0..horario_max
+
     
+
     
 
 CONCRETE_VARIABLES
@@ -24,6 +28,7 @@ CONCRETE_VARIABLES
     ,salas_i
     ,salaHasCapacidade_i
     ,salaHasHorarios_i
+    , sessao_i
 //     filmes, salas,
 //     salaHasCapacidade, salaHasHorarios, sessao
 //     ,ingressos_vendidos
@@ -45,8 +50,10 @@ INVARIANT
     
     & salaHasCapacidade_i: SALA --> 0..limit_capacidade
     
-    & salaHasHorarios_i: SALA*HORARIO-->BOOL
-    & dom(salaHasHorarios_i |> {TRUE}) = salaHasHorarios
+    & salaHasHorarios_i: SALA*HORARIO --> BOOL
+    
+    & sessao_i: SALA*HORARIO --> FILME
+//    & dom(sessao_i |>> {0}) = dom(salaHasHorarios_i |> {TRUE})
 
 INITIALISATION
     filmes_i := FILME*{FALSE};
@@ -54,7 +61,9 @@ INITIALISATION
 
     
     salaHasCapacidade_i := SALA*{0};
-    salaHasHorarios_i := SALA*HORARIO*{FALSE}
+            
+    salaHasHorarios_i := SALA*HORARIO*{FALSE};
+    sessao_i := SALA*HORARIO*{0}
     
 //    || filmes :={}
 //    || salas :={} 
@@ -113,39 +122,39 @@ OPERATIONS
 
     ff <--QuerySalas =
     BEGIN
-    VAR cc IN
-       cc:=0;
-       WHILE cc < limit_salas DO
-          ff(cc) := salas_i(cc);
-          cc := cc+1
-       INVARIANT
-          cc:0..limit_salas
-          &cc:dom(salas_i)
-          &ff: 0..limit_salas-1 --> BOOL
-
-       VARIANT 
-          limit_salas - cc
-       END
-    END
+        VAR cc IN
+           cc:=0;
+           WHILE cc < limit_salas DO
+              ff(cc) := salas_i(cc);
+              cc := cc+1
+           INVARIANT
+              cc:0..limit_salas
+              &cc:dom(salas_i)
+              &ff: 0..limit_salas-1 --> BOOL
+    
+           VARIANT 
+              limit_salas - cc
+           END
+        END
     END;
     
        
     
     //SalaHasHorario 
     DisponibilizarSalaEmHorarios(ss,hh)=
-//    skip;
-    BEGIN
-        salaHasHorarios_i(ss,hh) := TRUE
-    END;
-        
+    skip;
+//    BEGIN
+//        salaHasHorarios_i(ss,hh) := TRUE
+//    END;
+//        
     
     
    
     IndisponibilizarSalaEmHorarios(ss,hh) =
-//     skip;
-    BEGIN
-        salaHasHorarios_i(ss,hh) := TRUE
-    END;
+     skip;
+//    BEGIN
+//        salaHasHorarios_i(ss,hh) := TRUE
+//    END;
         
 
       
@@ -157,8 +166,28 @@ OPERATIONS
     RemoverSessao(ss,hh) =
      skip;
 
-    vv <-- QuerySessao =
-    skip;
+//    vv <-- QuerySessao =
+//        BEGIN
+//        vv:= SALA*HORARIO*{0}
+//        END;
+//    BEGIN
+//        VAR cc IN
+//           cc:=0;
+//           WHILE cc < limit_salas*horario_max DO
+//              vv(cc) := salas_i(cc);
+//              cc := cc+1
+//           INVARIANT
+//              cc:0..limit_salas
+//              &cc:dom(salas_i)
+//              &vv: 0..limit_salas*horario_max --> BOOL
+//    
+//           VARIANT 
+//              limit_salas - cc
+//           END
+//        END
+//    END;
+
+//    skip;
 
 
     // Ingresso
@@ -177,14 +206,17 @@ OPERATIONS
      skip;
 
     rr <-- visualizarFilmesEmCartaz =
-    skip;
+        rr := FILME*{FALSE};
+//    skip;
 
    
    rr <-- VisualizarFilmesPorHorario(hh) =
-    skip;
+       rr := FILME*{FALSE};
+//    skip;
 
-     rr <-- VisualizarHorariosPorFilme(ff) = 
-    skip;
+     rr <-- VisualizarHorariosPorFilme(ff) =
+         rr := HORARIO*{FALSE};
+//    skip;
 
    
    ok<-- pre_adicionarFilme(ff) =
@@ -204,7 +236,18 @@ OPERATIONS
     skip;
        
    ok<-- pre_adicionarSala(ss, tt) =
-    skip;
+   BEGIN
+       VAR sala IN
+           sala := salas_i(ss);
+           IF sala = FALSE & tt>= 1 & tt <= limit_capacidade
+           THEN ok := TRUE
+           ELSE ok := FALSE
+           END
+       END
+   END;
+   
+           
+//    skip;
    
    ok <-- pre_removerSala(ss)= 
     skip;
