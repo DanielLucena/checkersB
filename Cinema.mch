@@ -65,9 +65,12 @@ INVARIANT
      //5. Invarintes de sessão
      //CORRECAO: Inserir o conceito de assento marcado para a sessão
          & sessao : salaHasHorarios +-> filmes
-         & ingressos_vendidos : sessao --> 0..limit_capacidade
-         & ingressos_meia : sessao --> 0..(limit_capacidade/2)
-         & acentos_sessao : sessao --> (0..limit_capacidade-1 +-> BOOL)
+         & ingressos_vendidos : salaHasHorarios +-> 0..limit_capacidade
+         & dom(sessao) = dom(ingressos_vendidos)
+         & ingressos_meia : salaHasHorarios +-> 0..(limit_capacidade/2)
+         & dom(sessao) = dom(ingressos_meia)
+         & acentos_sessao : salaHasHorarios +-> (0..limit_capacidade-1 +-> BOOL)
+         & dom(sessao) = dom(acentos_sessao)
          & !ff .(ff : FILME => !hh .(hh : HORARIO => 
          card({ss | ss : SALA 
               & (ss |-> hh) : dom(sessao) 
@@ -78,16 +81,16 @@ INVARIANT
         //Para toda sessao
         & !(ss, hh) . 
         (ss:SALA & hh:HORARIO & (ss|->hh):dom(sessao) =>
-            ingressos_vendidos( (ss|->hh) |-> sessao(ss|->hh) ) <= salaHasCapacidade(ss)
+            ingressos_vendidos( (ss|->hh) ) <= salaHasCapacidade(ss)
 
-            & ingressos_meia((ss|->hh) |-> sessao(ss|->hh)) <= 
+            & ingressos_meia((ss|->hh) ) <= 
         salaHasCapacidade(ss)/2
 
 //            & ingressos_ofertados((ss|->hh) |-> sessao(ss|->hh)) = 
 //        salaHasCapacidade(ss)
 
-            & ingressos_meia((ss|->hh)|->sessao(ss|->hh)) 
-                <= ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
+            & ingressos_meia((ss|->hh)) 
+                <= ingressos_vendidos((ss|->hh))
             )
 
          
@@ -197,10 +200,10 @@ OPERATIONS
        & !s2 .(s2 : SALA & (s2 |-> hh) : dom(sessao) => sessao(s2 |-> hh) /= ff)
     THEN
        sessao := sessao \/ {(ss|->hh)|->ff} 
-       || ingressos_vendidos:= ingressos_vendidos \/ {((ss|->hh)|->ff)|->0} 
-       || ingressos_meia := ingressos_meia \/ {((ss|->hh)|->ff)|->0}
+       || ingressos_vendidos:= ingressos_vendidos \/ {(ss|->hh)|->0} 
+       || ingressos_meia := ingressos_meia \/ {(ss|->hh)|->0}
        || acentos_sessao := acentos_sessao 
-           \/ {((ss|->hh)|->ff)|-> ((0..limit_capacidade-1)*{FALSE})}
+           \/ {(ss|->hh)|-> ((0..limit_capacidade-1)*{FALSE})}
     END;
     
     RemoverSessao(ss,hh) =
@@ -208,12 +211,12 @@ OPERATIONS
        ss:SALA & hh: HORARIO
        & ss:salas & ss|->hh : salaHasHorarios 
        & ss|->hh : dom(sessao) 
-       & ingressos_vendidos((ss|->hh)|->sessao((ss|->hh))) =0
+       & ingressos_vendidos((ss|->hh)) =0
     THEN
        sessao :=  {ss|->hh} <<| sessao 
-       || ingressos_vendidos:= {(ss|->hh)|->sessao((ss|->hh))} <<|  ingressos_vendidos 
-       || ingressos_meia := {(ss|->hh)|->sessao((ss|->hh))} <<|  ingressos_meia 
-       || acentos_sessao := {(ss|->hh)|->sessao((ss|->hh))} <<| acentos_sessao
+       || ingressos_vendidos:= {(ss|->hh)} <<|  ingressos_vendidos 
+       || ingressos_meia := {(ss|->hh)} <<|  ingressos_meia 
+       || acentos_sessao := {(ss|->hh)} <<| acentos_sessao
     END;
   
      //CORRECAO: Remover tipos abstratos da assinatura das operações
@@ -245,21 +248,21 @@ OPERATIONS
        (ss : SALA 
            & (ss |-> hh) : dom(sessao) 
            & sessao(ss |-> hh) = ff 
-           & ingressos_vendidos((ss|->hh)|->ff ) < salaHasCapacidade(ss)
-           & (tt=meia => ingressos_meia((ss|->hh)|->ff) < (salaHasCapacidade(ss)/2))
-           & (aa|->FALSE): acentos_sessao((ss |-> hh)|->ff )
+           & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)
+           & (tt=meia => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
+           & (aa|->FALSE): acentos_sessao(ss |-> hh)
        )
        & hh >= horaAtual
     THEN
     ANY ss
     WHERE ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff
     THEN
-       ingressos_vendidos((ss|->hh)|->ff) := ingressos_vendidos((ss|->hh)|->ff) +1
-       || acentos_sessao((ss |-> hh)|->ff ) := 
-       acentos_sessao((ss |-> hh)|->ff ) <+ {aa|->TRUE}
+       ingressos_vendidos(ss|->hh) := ingressos_vendidos(ss|->hh) +1
+       || acentos_sessao(ss |-> hh) := 
+       acentos_sessao(ss |-> hh) <+ {aa|->TRUE}
        || 
        IF tt=meia
-       THEN ingressos_meia((ss|->hh)|->ff) := ingressos_meia((ss|->hh)|->ff) +1
+       THEN ingressos_meia(ss|->hh) := ingressos_meia(ss|->hh) +1
        ELSE skip
            END
        END
@@ -286,17 +289,17 @@ OPERATIONS
     PRE ss:SALA & hh:HORARIO 
        & ss:salas & ss|->hh : salaHasHorarios 
        & ss|->hh : dom(sessao)
-       & (ss|->hh)|->sessao(ss|->hh) : dom(ingressos_vendidos)
+       & (ss|->hh) : dom(ingressos_vendidos)
     THEN ii := salaHasCapacidade(ss)
-             - ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
+             - ingressos_vendidos(ss|->hh)
     END;
     
     ii<--ConsultarIngressosCompradosPorSessao(ss,hh)=
     PRE ss:SALA & hh:HORARIO 
        & ss:salas & ss|->hh : salaHasHorarios 
        & ss|->hh : dom(sessao)
-       & (ss|->hh)|->sessao(ss|->hh) : dom(ingressos_vendidos)
-    THEN ii := ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
+       & (ss|->hh) : dom(ingressos_vendidos)
+    THEN ii := ingressos_vendidos(ss|->hh)
     END;
     
     //CORRECAO: Remover tipos abstratos da assinatura das operações
@@ -424,7 +427,7 @@ OPERATIONS
    PRE ss : SALA & hh : HORARIO
    THEN
        IF (ss |-> hh) : dom(sessao) &
-          ingressos_vendidos((ss |-> hh) |-> sessao(ss |-> hh)) = 0
+          ingressos_vendidos(ss |-> hh) = 0
        THEN ok := TRUE
        ELSE ok := FALSE
        END
@@ -439,8 +442,8 @@ OPERATIONS
               ss : SALA &
               (ss |-> hh) : dom(sessao) &
               sessao(ss |-> hh) = ff &
-              ingressos_vendidos((ss |-> hh) |-> ff) < salaHasCapacidade(ss) &
-              (tt = meia => ingressos_meia((ss |-> hh) |-> ff) < salaHasCapacidade(ss) / 2)
+              ingressos_vendidos(ss |-> hh) < salaHasCapacidade(ss) &
+              (tt = meia => ingressos_meia(ss |-> hh) < salaHasCapacidade(ss) / 2)
           )
        THEN ok := TRUE
        ELSE ok := FALSE
@@ -511,7 +514,7 @@ OPERATIONS
         IF ss: salas 
            & ss|->hh : salaHasHorarios 
            & ss|->hh : dom(sessao) 
-           & ingressos_vendidos((ss|->hh)|->sessao((ss|->hh))) = 0
+           & ingressos_vendidos(ss|->hh) = 0
         THEN
             ok := TRUE
         ELSE

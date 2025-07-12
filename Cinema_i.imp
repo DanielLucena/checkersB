@@ -30,6 +30,7 @@ CONCRETE_VARIABLES
     ,salaHasCapacidade_i
     ,salaHasHorarios_i
     , sessao_i
+    , ingressos_vendidos_i
 //     filmes, salas,
 //     salaHasCapacidade, salaHasHorarios, sessao
 //     ,ingressos_vendidos
@@ -57,7 +58,12 @@ INVARIANT
     & salaHasHorarios_i: SALA*HORARIO --> BOOL
     
     & sessao_i: SALA*HORARIO --> FILME
-//    & dom(sessao_i |>> {0}) = dom(salaHasHorarios_i |> {TRUE})
+    & dom(sessao_i |>> {dummyFilme}) = dom(salaHasHorarios_i |> {TRUE})
+    & dom(sessao) = dom(sessao_i |>> {dummyFilme})
+    
+    & ingressos_vendidos_i: SALA*HORARIO --> -1..limit_capacidade
+    & ingressos_vendidos_i |>> {-1} = ingressos_vendidos
+    
 
 INITIALISATION
     filmes_i := FILME*{FALSE};
@@ -67,7 +73,9 @@ INITIALISATION
     salaHasCapacidade_i := SALA*{0};
             
     salaHasHorarios_i := SALA*HORARIO*{FALSE};
-    sessao_i := SALA*HORARIO*{dummyFilme}
+    sessao_i := SALA*HORARIO*{dummyFilme};
+    
+    ingressos_vendidos_i := SALA*HORARIO*{-1}
     
 //    || filmes :={}
 //    || salas :={} 
@@ -159,20 +167,31 @@ OPERATIONS
     
    
     IndisponibilizarSalaEmHorarios(ss,hh) =
-     skip;
-//    BEGIN
-//        salaHasHorarios_i(ss,hh) := TRUE
-//    END;
+//     skip;
+    BEGIN
+        salaHasHorarios_i(ss,hh) := FALSE
+    END;
         
 
       
     // Sessao
-    AdicionarSessao(ss, hh, ff) = 
-    skip ;
+    AdicionarSessao(ss, hh, ff) =
+    BEGIN
+        sessao_i(ss,hh) := ff;
+        ingressos_vendidos_i(ss,hh) := 0
+        //adicionar as outras variaveis de ingresso
+    END;
+    
+//    skip ;
 
     
     RemoverSessao(ss,hh) =
-     skip;
+//     skip;
+    BEGIN
+        sessao_i(ss,hh) := dummyFilme;
+        ingressos_vendidos_i(ss,hh) := -1
+        //adicionar as outras variaveis de ingresso
+    END;
 
 //    vv <-- QuerySessao =
 //        BEGIN
