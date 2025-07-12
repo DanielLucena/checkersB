@@ -1,1 +1,8 @@
 *.prob
+/bdp
+/lang/.project
+/lang/c/Cinema_i.c
+/lang/c/Cinema.h
+/lang/c/Main.o
+/lang/c/Main.exe
+/lang/c/Main
