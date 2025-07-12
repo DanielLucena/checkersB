@@ -6,7 +6,7 @@ MACHINE
     Cinema
     
 CONSTANTS
-   limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO
+   limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO, dummyFilme
    
 PROPERTIES
    //valores das contantes
@@ -20,6 +20,7 @@ PROPERTIES
     //Solucao: 24 horas 
 //   & HORARIO <: NAT
    & HORARIO = 0..horario_max
+   & dummyFilme: FILME
    
 SETS
     SALA
@@ -36,6 +37,7 @@ VARIABLES
      ,horaAtual
      //CORRECAO: remover variavel ingressos_ofertados 
      ,acentos_sessao
+     
 
 INVARIANT
     
@@ -105,7 +107,7 @@ OPERATIONS
     // Filmes
     AdicionarFilme(ff) =
     PRE
-        ff : FILME & ff /: filmes & card(filmes) < limit_filmes
+        ff : FILME & ff /: filmes & card(filmes) < limit_filmes & ff /= dummyFilme
     THEN
         filmes := filmes \/ {ff}
     END;
@@ -189,7 +191,7 @@ OPERATIONS
     AdicionarSessao(ss, hh, ff) = 
     PRE
        ss:SALA & hh: HORARIO & ff: FILME
-       & ss:salas & ff:filmes 
+       & ss:salas & ff:filmes & ff/= dummyFilme
        & ss|->hh : salaHasHorarios 
        & ss|->hh /: dom(sessao)
        & !s2 .(s2 : SALA & (s2 |-> hh) : dom(sessao) => sessao(s2 |-> hh) /= ff)
@@ -349,7 +351,7 @@ OPERATIONS
    ok<-- pre_adicionarFilme(ff) =
    PRE ff: FILME
    THEN
-      IF ff /: filmes & card(filmes) < limit_filmes
+      IF ff /: filmes & card(filmes) < limit_filmes & ff/= dummyFilme
       THEN ok := TRUE
       ELSE ok:= FALSE
       END

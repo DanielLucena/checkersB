@@ -15,9 +15,10 @@ VALUES //valores para os SETs
     limit_filmes = 10;
     limit_turnos = 2;
     horario_max = 24;
-    SALA = 0..4; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
-    FILME = 0..9; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
-    HORARIO = 0..horario_max
+    SALA = 0..limit_salas; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
+    FILME = 0..limit_filmes; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
+    HORARIO = 0..horario_max;
+    dummyFilme = 0
 
     
 
@@ -50,6 +51,9 @@ INVARIANT
     
     & salaHasCapacidade_i: SALA --> 0..limit_capacidade
     
+    //Pensar depois se é valido colocar dummy em vez de zero.
+    & salaHasCapacidade = salaHasCapacidade_i |>> {0}
+    
     & salaHasHorarios_i: SALA*HORARIO --> BOOL
     
     & sessao_i: SALA*HORARIO --> FILME
@@ -63,7 +67,7 @@ INITIALISATION
     salaHasCapacidade_i := SALA*{0};
             
     salaHasHorarios_i := SALA*HORARIO*{FALSE};
-    sessao_i := SALA*HORARIO*{0}
+    sessao_i := SALA*HORARIO*{dummyFilme}
     
 //    || filmes :={}
 //    || salas :={} 
@@ -90,13 +94,17 @@ OPERATIONS
     
     ff <--QueryFilmes =
     BEGIN
-       VAR ii IN
+       VAR ii, filmeAtual IN
             ii := 0;
+            filmeAtual:= FALSE;
            WHILE ii < limit_filmes DO
-               ff(ii) := filmes_i(ii);
+              filmeAtual := filmes_i(ii);
+               ff(ii) := filmeAtual;
                ii := ii + 1
            INVARIANT
                ii: 0..limit_filmes
+               & ii : FILME
+               & filmeAtual: BOOL
                & ii: dom(filmes_i)
                & ff: 0..limit_filmes-1 --> BOOL
            VARIANT
@@ -117,7 +125,8 @@ OPERATIONS
     
     RemoverSala(ss)=
         BEGIN
-           salas_i(ss) := FALSE
+           salas_i(ss) := FALSE;
+           salaHasCapacidade_i(ss) := 0
         END;
 
     ff <--QuerySalas =
@@ -142,11 +151,10 @@ OPERATIONS
     
     //SalaHasHorario 
     DisponibilizarSalaEmHorarios(ss,hh)=
-    skip;
-//    BEGIN
-//        salaHasHorarios_i(ss,hh) := TRUE
-//    END;
-//        
+    BEGIN
+        salaHasHorarios_i(ss,hh) := TRUE
+    END;
+        
     
     
    
@@ -233,7 +241,16 @@ OPERATIONS
      
    
    ok <-- pre_removerFilme(ff) =
-    skip;
+     BEGIN
+        VAR filme IN
+            filme := filmes_i(ff);
+            IF filme = TRUE
+            THEN ok := TRUE
+            ELSE ok := FALSE
+            END
+        END
+        
+    END;
        
    ok<-- pre_adicionarSala(ss, tt) =
    BEGIN
@@ -250,7 +267,15 @@ OPERATIONS
 //    skip;
    
    ok <-- pre_removerSala(ss)= 
-    skip;
+    BEGIN
+       VAR sala IN
+           sala := salas_i(ss);
+           IF sala = TRUE 
+           THEN ok := TRUE
+           ELSE ok := FALSE
+           END
+       END
+   END;
    
    ok <-- pre_disponibilizarSalaEmHorarios(ss, hh) =
     skip;
