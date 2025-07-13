@@ -50,11 +50,14 @@ INVARIANT
     
   
     & dom(sessao_i |>> {0}) = dom(salaHasHorarios_i |> {TRUE})
+    //todo: ele ta chiando por algum motivo
+    & dom(sessao) = dom(sessao_i |>> {dummyFilme})
     
     
      
     // Refinamento dos dados de ingressos e assentos
     //todo: falta especificar cada um deles ainda e relacionar com a maquina abstrata
+    //todo: talvez usar a ideia de dummy colocando o dummy como zero e  toda operacao ele checa primeiro se é o dummy se for ai ele coloca 1 se n for o dummy ele so vai somando normal, teria que toda vez q zerar o dia ele iria para o dummy.
     & ingressos_vendidos_i : SALA * HORARIO --> 0..limit_capacidade 
     & ingressos_meia_i : SALA * HORARIO --> 0..limit_capacidade 
 //    & acentos_sessao_i : (SALA * HORARIO) * (0..limit_capacidade) --> BOOL 
