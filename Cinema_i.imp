@@ -18,6 +18,8 @@ CONCRETE_VARIABLES
 
 
      ,horaAtual_i
+     , card_filmes
+     ,card_salas
 
 //     ,acentos_sessao_i
 
@@ -28,17 +30,24 @@ INVARIANT
 
     filmes_i: FILME --> BOOL
     & filmes = dom(filmes_i |> {TRUE})
+    & card_filmes : 0..limit_filmes
+    & card_filmes = card(filmes)
+    & card_filmes = card(dom(filmes_i |> {TRUE}))
     
     
     & salas_i: SALA --> BOOL
     & salas = dom(salas_i |> {TRUE})
+    &card_salas : 0..limit_salas
+    & card_salas = card(salas)
+    & card_salas = card(dom(salas_i|>{TRUE}))
+    
     
     & salaHasCapacidade_i: SALA --> 0..limit_capacidade
     & salaHasCapacidade = salaHasCapacidade_i |>> {0}
     
     
     
-    
+    //todo: Invariante de ligacao
     & salaHasHorarios_i: SALA*HORARIO --> BOOL
     
     & sessao_i: SALA*HORARIO --> FILME
@@ -65,17 +74,19 @@ INVARIANT
 
 
 
+
 VALUES //valores para os SETs
     limit_capacidade = 10;
     limit_salas = 5;
     limit_filmes = 10;
     limit_turnos = 2;
     horario_max = 24;
+ 
   
     
-    
-//     limit_salas_i = limit_salas -1;
-//     limit_filmes_i = limit_filmes-1;
+// todo: ver essa bomba
+//     ultima_sala= limit_salas -1;
+//     ultimo_filme = limit_filmes-1;
     
     SALA = 0..limit_salas; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
     FILME = 0..limit_filmes; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
@@ -86,6 +97,8 @@ VALUES //valores para os SETs
 INITIALISATION
     filmes_i := FILME*{FALSE};
     salas_i := SALA*{FALSE};
+    card_filmes := 0;
+    card_salas := 0;
 
     
     salaHasCapacidade_i := SALA*{0};
@@ -104,16 +117,22 @@ INITIALISATION
         
 
 OPERATIONS
+    //OK
     AdicionarFilme(ff) =
-        filmes_i(ff) := TRUE; 
-        
+    BEGIN
+        filmes_i(ff) := TRUE;
+        card_filmes := card_filmes+1
+     END;
 
-    
+    //OK
     RemoverFilme(ff) =
+    BEGIN
         filmes_i(ff) := FALSE;
+        card_filmes := card_filmes-1
+     END;
    
 
-    
+    //OK
     ff <--QueryFilmes =
     BEGIN
        VAR ii, filmeAtual IN
@@ -129,6 +148,8 @@ OPERATIONS
                & filmeAtual: BOOL
                & ii: dom(filmes_i)
                & ff: 0..limit_filmes-1 --> BOOL
+               //todo: Talvez pegar isso e jogar no query salas
+               & !jj.(  jj:0..(ii-1) => ff(jj) = filmes_i(jj) )
            VARIANT
                limit_filmes - ii
            END
@@ -138,19 +159,24 @@ OPERATIONS
     END;
     
     //Sala
+    //OK
     AdicionarSala(ss,tt)=
       BEGIN
            salas_i(ss) := TRUE;
-           salaHasCapacidade_i(ss) := tt
+           salaHasCapacidade_i(ss) := tt;
+           card_salas := card_salas+1
         END;
 
-    
+    //OK
     RemoverSala(ss)=
         BEGIN
            salas_i(ss) := FALSE;
-           salaHasCapacidade_i(ss) := 0
+           salaHasCapacidade_i(ss) := 0;
+           card_salas:= card_salas-1
         END;
 
+
+    //OK
     ff <--QuerySalas =
     BEGIN
         VAR cc IN
@@ -163,6 +189,7 @@ OPERATIONS
               cc:0..limit_salas
               &cc:dom(salas_i)
               &ff: SALA --> BOOL
+              & !jj.(  jj:0..(cc-1) => ff(cc) = salas_i(cc) )
     
            VARIANT 
               limit_salas - cc
@@ -173,11 +200,14 @@ OPERATIONS
        
     
     //SalaHasHorario 
+    //OK
     DisponibilizarSalaEmHorarios(ss,hh)=
     BEGIN
         salaHasHorarios_i(ss,hh) := TRUE
     END;
         
+     
+    //OK 
     IndisponibilizarSalaEmHorarios(ss,hh) =
     BEGIN
         salaHasHorarios_i(ss,hh) := FALSE
@@ -261,7 +291,7 @@ OPERATIONS
     BEGIN
         VAR filme IN
             filme := filmes_i(ff);
-            IF filme = FALSE
+            IF filme = FALSE & ff/=dummyFilme & card_filmes < limit_filmes & ff<=limit_filmes
             THEN ok := TRUE
             ELSE ok := FALSE
             END
@@ -269,12 +299,12 @@ OPERATIONS
         
     END;
      
-   
+   //todo : ff/= ran(sessao_i)
    ok <-- pre_removerFilme(ff) =
      BEGIN
         VAR filme IN
             filme := filmes_i(ff);
-            IF filme = TRUE
+            IF filme = TRUE & ff<=limit_filmes & ff/=dummyFilme
             THEN ok := TRUE
             ELSE ok := FALSE
             END
@@ -286,7 +316,7 @@ OPERATIONS
    BEGIN
        VAR sala IN
            sala := salas_i(ss);
-           IF sala = FALSE & tt>= 1 & tt <= limit_capacidade
+           IF sala = FALSE & tt>= 1 & tt <= limit_capacidade & card_salas < limit_salas & ss<= limit_salas
            THEN ok := TRUE
            ELSE ok := FALSE
            END
@@ -294,18 +324,20 @@ OPERATIONS
    END;
    
            
-   
+   //todo : {ss} <| salaHasHorarios = {} 
    ok <-- pre_removerSala(ss)= 
     BEGIN
        VAR sala IN
            sala := salas_i(ss);
-           IF sala = TRUE 
+           IF sala = TRUE & ss<= limit_salas
            THEN ok := TRUE
            ELSE ok := FALSE
            END
        END
    END;
    
+   
+   //todo: Lembrar do limite de turno e talvez somar nas de adicao e subtrair nas de remocao para quando chegar em consulta apenas utilizar o valor.
    ok <-- pre_disponibilizarSalaEmHorarios(ss, hh) =
     BEGIN
         VAR disponivel, existeSala IN
