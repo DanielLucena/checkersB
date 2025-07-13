@@ -13,8 +13,8 @@ CONCRETE_VARIABLES
     ,salaHasCapacidade_i
     ,salaHasHorarios_i
     , sessao_i
-     ,ingressos_vendidos_i
-     ,ingressos_meia_i
+//    ,ingressos_vendidos_i
+//    ,ingressos_meia_i
 
 
      ,horaAtual_i
@@ -49,16 +49,16 @@ INVARIANT
     
     //todo: Invariante de ligacao
     & salaHasHorarios_i: SALA*HORARIO --> BOOL
-    & salaHasHorarios = dom(salaHasHorarios_i |>{TRUE})  
+    & salaHasHorarios = dom(salaHasHorarios_i |> {TRUE})  
     
     & sessao_i: SALA*HORARIO --> FILME
-    & sessao = sessao_i |>>{dummyFilme}
+    & sessao = sessao_i |>> {dummyFilme}
     
     // Refinamento da hora atual
     & horaAtual_i : HORARIO 
     & horaAtual = horaAtual_i 
     
-  
+
     & dom(sessao_i |>> {0}) = dom(salaHasHorarios_i |> {TRUE})
     //todo: ele ta chiando por algum motivo
     & dom(sessao) = dom(sessao_i |>> {dummyFilme})
@@ -68,9 +68,9 @@ INVARIANT
     // Refinamento dos dados de ingressos e assentos
     //todo: falta especificar cada um deles ainda e relacionar com a maquina abstrata
     //todo: talvez usar a ideia de dummy colocando o dummy como zero e  toda operacao ele checa primeiro se é o dummy se for ai ele coloca 1 se n for o dummy ele so vai somando normal, teria que toda vez q zerar o dia ele iria para o dummy.
-    & ingressos_vendidos_i : SALA * HORARIO --> 0..limit_capacidade 
-    & ingressos_meia_i : SALA * HORARIO --> 0..limit_capacidade 
-//    & acentos_sessao_i : (SALA * HORARIO) * (0..limit_capacidade) --> BOOL 
+//    & ingressos_vendidos_i : SALA * HORARIO --> ASSENTO
+//    & ingressos_meia_i : SALA * HORARIO --> 0..limit_capacidade
+//    & acentos_sessao_i : SALA*HORARIO *FILME --> (0..limit_capacidade)   
 
 
 
@@ -92,7 +92,9 @@ VALUES //valores para os SETs
     SALA = 0..limit_salas; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
     FILME = 0..limit_filmes; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
     HORARIO = 0..horario_max;
-    dummyFilme = 0
+    ASSENTO = 0..limit_capacidade;
+    dummyFilme = 0;
+    dummyAssento = 0
 
 
 INITIALISATION
@@ -108,10 +110,10 @@ INITIALISATION
     sessao_i := (SALA*HORARIO)*{dummyFilme};
     
 
-     horaAtual_i := 0;
-     ingressos_vendidos_i := (SALA * HORARIO) * {0};
-    ingressos_meia_i := (SALA * HORARIO) * {0}
-//    acentos_sessao_i := ((SALA * HORARIO) * (0..limit_capacidade)) * {FALSE}
+    horaAtual_i := 0
+//    ingressos_vendidos_i := (SALA * HORARIO) * {dummyAssento};
+//    ingressos_meia_i := (SALA * HORARIO) * {0}
+//    acentos_sessao_i := ((SALA*HORARIO)*{dummyFilme}) *(0..limit_capacidade)
 
     
 
@@ -190,7 +192,7 @@ OPERATIONS
               cc:0..limit_salas
               &cc:dom(salas_i)
               &ff: SALA --> BOOL
-              & !jj.(  jj:0..(cc-1) => ff(cc) = salas_i(cc) )
+              & !jj.(  jj:0..(cc-1) => ff(jj) = salas_i(jj) )
     
            VARIANT 
               limit_salas - cc
@@ -220,8 +222,8 @@ OPERATIONS
     AdicionarSessao(ss, hh, ff) = 
     BEGIN
            sessao_i(ss, hh) := ff;
-           ingressos_vendidos_i(ss, hh) := 0;
-           ingressos_meia_i(ss, hh) := 0;
+//           ingressos_vendidos_i(ss, hh) := 0;
+//           ingressos_meia_i(ss, hh) := 0;
            VAR ii, capacidadeSala IN
                ii := 0;
                capacidadeSala := salaHasCapacidade_i(ss);
@@ -253,10 +255,10 @@ OPERATIONS
               
               salaHasHorarios_i := (SALA * HORARIO) * {FALSE};
               
-              sessao_i := (SALA * HORARIO) * {dummyFilme};
+              sessao_i := (SALA * HORARIO) * {dummyFilme}
               
-              ingressos_vendidos_i := (SALA * HORARIO) * {0};
-              ingressos_meia_i := (SALA * HORARIO) * {0}
+//              ingressos_vendidos_i := (SALA * HORARIO) * {0};
+//              ingressos_meia_i := (SALA * HORARIO) * {0}
 //              acentos_sessao_i := ((SALA * HORARIO) * (0..limit_capacidade)) * {FALSE}
           END
       END;
@@ -346,14 +348,15 @@ OPERATIONS
             disponivel:= salaHasHorarios_i(ss,hh);
             ii := 0;
             jj := 0;
-            WHILE jj <= horario_max
+            WHILE jj <= horario_max & ii < limit_turnos
             DO  temHorario := salaHasHorarios_i(ss,jj);
                     IF temHorario = TRUE
                     THEN ii:= ii+1
                     END;
                     jj:=jj+1
-                    //TODO: INVARIANT Desse loop pensar um pouco mais como fazer
-            INVARIANT ii: NAT & jj:NAT & temHorario:BOOL  
+            INVARIANT ii: NAT & jj:NAT & temHorario:BOOL & ii: 0..limit_turnos
+                & jj: 0..horario_max+1
+                & ii = card({hh | hh : 0..jj-1 & salaHasHorarios_i(ss, hh) = TRUE})
             VARIANT horario_max - jj
             END;
             IF disponivel = FALSE & existeSala = TRUE & ii< limit_turnos
@@ -364,6 +367,7 @@ OPERATIONS
             
     END;
    
+   //todo: sessao
    ok <-- pre_indisponibilizarSalaEmHorarios(ss, hh) =
        BEGIN
         VAR disponivel, existeSala IN

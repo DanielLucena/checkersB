@@ -6,7 +6,7 @@ MACHINE
     Cinema
     
 CONSTANTS
-   limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO, dummyFilme
+   limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO, dummyFilme, dummyAssento
    
 PROPERTIES
    //valores das contantes
@@ -24,11 +24,13 @@ PROPERTIES
 //   & HORARIO <: NAT
    & HORARIO = 0..horario_max
    & dummyFilme: FILME
+   & dummyAssento: ASSENTO
    
 SETS
     SALA
     ;FILME
     ;TIPO_INGRESSO = {meia,inteira}
+    ; ASSENTO
 
 VARIABLES
      filmes, salas,
