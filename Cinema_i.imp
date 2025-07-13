@@ -49,6 +49,7 @@ INVARIANT
     
     //todo: Invariante de ligacao
     & salaHasHorarios_i: SALA*HORARIO --> BOOL
+    & salaHasHorarios = dom(salaHasHorarios_i |>{TRUE})  
     
     & sessao_i: SALA*HORARIO --> FILME
     & sessao = sessao_i |>>{dummyFilme}
@@ -337,13 +338,25 @@ OPERATIONS
    END;
    
    
-   //todo: Lembrar do limite de turno e talvez somar nas de adicao e subtrair nas de remocao para quando chegar em consulta apenas utilizar o valor.
+//todo: Lembrar do limite de turno e talvez somar nas de adicao e subtrair nas de remocao para quando chegar em consulta apenas utilizar o valor.
    ok <-- pre_disponibilizarSalaEmHorarios(ss, hh) =
     BEGIN
-        VAR disponivel, existeSala IN
+        VAR disponivel, existeSala, ii, jj, temHorario IN
             existeSala := salas_i(ss);
             disponivel:= salaHasHorarios_i(ss,hh);
-            IF disponivel = FALSE & existeSala = TRUE
+            ii := 0;
+            jj := 0;
+            WHILE jj <= horario_max
+            DO  temHorario := salaHasHorarios_i(ss,jj);
+                    IF temHorario = TRUE
+                    THEN ii:= ii+1
+                    END;
+                    jj:=jj+1
+                    //TODO: INVARIANT Desse loop pensar um pouco mais como fazer
+            INVARIANT ii: NAT & jj:NAT & temHorario:BOOL  
+            VARIANT horario_max - jj
+            END;
+            IF disponivel = FALSE & existeSala = TRUE & ii< limit_turnos
             THEN ok:= TRUE
              ELSE ok := FALSE
              END
