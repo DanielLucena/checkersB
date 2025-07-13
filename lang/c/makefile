@@ -1,23 +1,32 @@
-# O nome do compilador
+# Define o compilador a ser usado (gcc ou clang)
 CC = gcc
-# O nome do executável final
-EXECUTABLE = Main
 
-# A regra padrão (o que acontece quando você digita apenas 'make')
-all: $(EXECUTABLE)
+# Flags do compilador: -Wall (mostra todos os avisos), -g (inclui infos de debug)
+CFLAGS = -Wall -g
 
-# Regra para criar o executável a partir do arquivo-objeto
-$(EXECUTABLE): Main.o
-	$(CC) Main.o -o $(EXECUTABLE)
+# Nome do programa executável final
+TARGET = cinema_cli
 
-# Regra para criar o arquivo-objeto a partir do arquivo .c
-Main.o: Main.c
-	$(CC) -c Main.c
+# Lista de todos os arquivos de código-fonte (.c)
+SOURCES = Main.c Cinema_i.c
 
-# Regra para executar o programa (use 'make run')
-run: all
-	./$(EXECUTABLE)
+# Gera a lista de arquivos de objeto (.o) a partir dos fontes
+OBJECTS = $(SOURCES:.c=.o)
 
-# Regra para limpar os arquivos gerados (use 'make clean')
+# Regra principal: para criar o executável, primeiro crie os arquivos de objeto
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	@echo "🔗 Ligando os arquivos para criar o executável..."
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
+	@echo "✅ Programa '$(TARGET)' criado com sucesso!"
+
+# Regra genérica para compilar arquivos .c em .o
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Regra "clean" para limpar os arquivos gerados
 clean:
-	rm -f Main.o $(EXECUTABLE)
+	@echo "🧹 Limpando arquivos compilados..."
+	rm -f $(OBJECTS) $(TARGET)
+	@echo "Limpeza concluída."

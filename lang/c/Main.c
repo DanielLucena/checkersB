@@ -1,102 +1,322 @@
+// main.c
 #include <stdio.h>
-#include <stdbool.h> // Incluído para usar o tipo 'bool' de forma padrão
+#include <stdlib.h>
+#include "Cinema.h" // Inclui o seu header exato
 
-/* * Nota: Incluir o arquivo .c diretamente não é uma prática padrão em projetos maiores.
- * O correto seria incluir o "Cinema.h" e compilar os dois arquivos .c juntos.
- * No entanto, para seguir o padrão do seu exemplo original, incluímos o .c aqui.
- */
-#include "Cinema_i.c" 
+// Protótipos das funções da interface
+void handle_adicionar_filme();
+void handle_remover_filme();
+void handle_adicionar_sala();
+void handle_remover_sala();
+void handle_adicionar_sessao();
+void handle_remover_sessao();
+void handle_comprar_ingresso();
+void handle_disponibilizar_sala();
+void handle_indisponibilizar_sala();
 
-// Função auxiliar para imprimir o estado atual de todas as variáveis do cinema.
-void print_cinema_data() {
-    printf("<=======================================================>\n");
-    
-    // Imprime a lista de filmes existentes
-    printf("FILMES EM CARTAZ (true = existe):\n");
-    for (int i = 0; i <= Cinema__limit_filmes; i++) {
-        // Acessa a variável estática diretamente, como no exemplo original
-        printf("filmes_i(%d) = %s\n", i, Cinema__filmes_i[i] ? "true" : "false");
-    }
-
-    // Imprime a lista de salas existentes
-    printf("\nSALAS DO CINEMA (true = existe):\n");
-    for (int i = 0; i <= Cinema__limit_salas; i++) {
-        printf("salas_i(%d) = %s\n", i, Cinema__salas_i[i] ? "true" : "false");
-    }
-
-    // Imprime a capacidade de cada sala
-    printf("\nCAPACIDADE DAS SALAS:\n");
-    for (int i = 0; i <= Cinema__limit_salas; i++) {
-        printf("salaHasCapacidade_i(%d) = %d\n", i, Cinema__salaHasCapacidade_i[i]);
-    }
-
-    // Imprime as sessões (qual filme está em qual sala e horário)
-    printf("\nSESSÕES (Sala x Horário = Filme):\n");
-    for (int i = 0; i <= Cinema__limit_salas; i++) {
-        for (int j = 0; j <= Cinema__horario_max; j++) {
-            // Imprime apenas se houver um filme alocado para não poluir a tela
-            if (Cinema__sessao_i[i][j] != Cinema__dummyFilme) {
-                printf("sessao_i(Sala %d, Horario %d) = Filme %d\n", i, j, Cinema__sessao_i[i][j]);
-            }
-        }
-    }
-    
-    printf("<=======================================================>\n");
+void exibir_menu()
+{
+    printf("\n--- 🎟️ Sistema de Gerenciamento de Cinema 🎟️ ---\n");
+    printf("--- Filmes e Salas ---\n");
+    printf(" 1. Adicionar Filme\n");
+    printf(" 2. Remover Filme\n");
+    printf(" 3. Adicionar Sala\n");
+    printf(" 4. Remover Sala\n");
+    printf("--- Horários e Sessões ---\n");
+    printf(" 5. Disponibilizar Sala em Horário\n");
+    printf(" 6. Indisponibilizar Sala em Horário\n");
+    printf(" 7. Adicionar Sessão\n");
+    printf(" 8. Remover Sessão\n");
+    printf(" 9. Comprar Ingresso\n");
+    printf("------------------------------------------------\n");
+    printf(" 0. Sair\n");
+    printf("------------------------------------------------\n");
+    printf("Escolha uma opção: ");
 }
 
-int main(int argc, char** argv) {
-    printf("INICIANDO SIMULAÇÃO DO CINEMA...\n\n");
-    
-    // 1. Inicializa todas as variáveis do sistema Cinema
+int main()
+{
+    // Inicializa o sistema do cinema uma única vez
     Cinema__INITIALISATION();
+    printf("Bem-vindo! Sistema de Cinema inicializado.\n");
 
-    printf("Estado inicial do sistema:\n");
-    print_cinema_data();
+    int escolha;
+    while (1)
+    {
+        exibir_menu();
+        if (scanf("%d", &escolha) != 1)
+        {
+            // Limpa o buffer de entrada em caso de input inválido
+            printf("\n>>> ERRO: Entrada inválida. Por favor, digite um número.\n");
+            while (getchar() != '\n')
+                ;
+            continue;
+        }
 
-    // 2. Executa algumas operações para popular o cinema
-    printf("\nADICIONANDO FILMES E SALAS...\n");
-    Cinema__AdicionarFilme(1); // Adiciona o filme com ID 1
-    Cinema__AdicionarFilme(3); // Adiciona o filme com ID 3
-
-    Cinema__AdicionarSala(1, 10); // Adiciona a sala 1 com capacidade 10
-    Cinema__AdicionarSala(2, 8);  // Adiciona a sala 2 com capacidade 8
-
-    // Disponibiliza a sala 1 no horário das 20h.
-    // Nota: A função AdicionarSessao não está implementada, então isso apenas mudará a variável 'salaHasHorarios_i'.
-    Cinema__DisponibilizarSalaEmHorarios(1, 20);
-
-    printf("\nEstado do sistema após adições:\n");
-    print_cinema_data();
-
-    // 3. Executa uma operação de consulta (Query)
-    printf("\nCONSULTANDO FILMES EM CARTAZ...\n");
-    bool filmes_em_cartaz[Cinema__limit_filmes + 1];
-    Cinema__QueryFilmes(filmes_em_cartaz);
-    for (int i = 0; i <= Cinema__limit_filmes; i++) {
-        printf("QueryFilmes(%d) = %s\n", i, filmes_em_cartaz[i] ? "true" : "false");
+        switch (escolha)
+        {
+        case 1:
+            handle_adicionar_filme();
+            break;
+        case 2:
+            handle_remover_filme();
+            break;
+        case 3:
+            handle_adicionar_sala();
+            break;
+        case 4:
+            handle_remover_sala();
+            break;
+        case 5:
+            handle_disponibilizar_sala();
+            break;
+        case 6:
+            handle_indisponibilizar_sala();
+            break;
+        case 7:
+            handle_adicionar_sessao();
+            break;
+        case 8:
+            handle_remover_sessao();
+            break;
+        case 9:
+            handle_comprar_ingresso();
+            break;
+        case 0:
+            printf("Encerrando o sistema. Até logo! 👋\n");
+            return 0;
+        default:
+            printf("\n>>> ERRO: Opção inválida! Tente novamente.\n");
+            break;
+        }
     }
-    
-    // 4. Demonstra o uso de funções de pré-condição
-    printf("\nVERIFICANDO PRÉ-CONDIÇÕES...\n");
-    bool ok;
-
-    // Tenta adicionar um filme que já existe
-    Cinema__pre_adicionarFilme(1, &ok);
-    printf("É permitido adicionar o filme 1 novamente? Resposta: %s\n", ok ? "Sim" : "Não");
-
-    // Tenta adicionar um filme novo
-    Cinema__pre_adicionarFilme(5, &ok);
-    printf("É permitido adicionar o filme 5? Resposta: %s\n", ok ? "Sim" : "Não");
-    
-    // Tenta adicionar uma sala com capacidade inválida (maior que o limite)
-    Cinema__pre_adicionarSala(3, 15, &ok); // 15 > limit_capacidade (10)
-    printf("É permitido adicionar a sala 3 com capacidade 15? Resposta: %s\n", ok ? "Sim" : "Não");
-    
-    // Tenta adicionar uma sala válida
-    Cinema__pre_adicionarSala(4, 5, &ok);
-    printf("É permitido adicionar a sala 4 com capacidade 5? Resposta: %s\n", ok ? "Sim" : "Não");
-
-    printf("\nSIMULAÇÃO FINALIZADA!\n");
 
     return 0;
+}
+
+// Funções "Manipuladoras" que interagem com o usuário e o código do cinema
+
+void handle_adicionar_filme()
+{
+    Cinema__FILME id_filme;
+    printf("-> Digite o ID do filme para adicionar (0 a %d): ", Cinema__FILME__max - 1);
+    scanf("%d", &id_filme);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_adicionarFilme(id_filme, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__AdicionarFilme(id_filme);
+        printf("✅ SUCESSO: Filme %d adicionado.\n", id_filme);
+    }
+    else
+    {
+        printf("❌ FALHA: Não foi possível adicionar o filme. A pré-condição não foi atendida (filme já existe ou ID inválido).\n");
+    }
+}
+
+void handle_remover_filme()
+{
+    Cinema__FILME id_filme;
+    printf("-> Digite o ID do filme para remover (0 a %d): ", Cinema__FILME__max - 1);
+    scanf("%d", &id_filme);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_removerFilme(id_filme, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__RemoverFilme(id_filme);
+        printf("✅ SUCESSO: Filme %d removido.\n", id_filme);
+    }
+    else
+    {
+        printf("❌ FALHA: Não foi possível remover o filme. A pré-condição não foi atendida (filme não existe).\n");
+    }
+}
+
+void handle_adicionar_sala()
+{
+    Cinema__SALA id_sala;
+    int capacidade;
+    printf("-> Digite o ID da sala para adicionar (0 a %d): ", Cinema__SALA__max - 1);
+    scanf("%d", &id_sala);
+    printf("-> Digite a capacidade da sala (1 a %d): ", Cinema__limit_capacidade);
+    scanf("%d", &capacidade);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_adicionarSala(id_sala, capacidade, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__AdicionarSala(id_sala, capacidade);
+        printf("✅ SUCESSO: Sala %d com capacidade %d adicionada.\n", id_sala, capacidade);
+    }
+    else
+    {
+        printf("❌ FALHA: Não foi possível adicionar a sala. A pré-condição não foi atendida (sala já existe ou capacidade inválida).\n");
+    }
+}
+
+void handle_remover_sala()
+{
+    Cinema__SALA id_sala;
+    printf("-> Digite o ID da sala para remover (0 a %d): ", Cinema__SALA__max - 1);
+    scanf("%d", &id_sala);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_removerSala(id_sala, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__RemoverSala(id_sala);
+        printf("✅ SUCESSO: Sala %d removida.\n", id_sala);
+    }
+    else
+    {
+        printf("❌ FALHA: Não foi possível remover a sala. A pré-condição não foi atendida (sala não existe).\n");
+    }
+}
+
+void handle_disponibilizar_sala()
+{
+    Cinema__SALA id_sala;
+    int horario;
+    printf("-> Digite o ID da sala: ");
+    scanf("%d", &id_sala);
+    printf("-> Digite o horário a ser disponibilizado (0 a %d): ", Cinema__horario_max);
+    scanf("%d", &horario);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_disponibilizarSalaEmHorarios(id_sala, horario, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__DisponibilizarSalaEmHorarios(id_sala, horario);
+        printf("✅ SUCESSO: Sala %d disponibilizada no horário %dh.\n", id_sala, horario);
+    }
+    else
+    {
+        printf("❌ FALHA: A pré-condição não foi atendida. Verifique se a função está implementada e se os dados são válidos.\n");
+    }
+}
+
+void handle_indisponibilizar_sala()
+{
+    Cinema__SALA id_sala;
+    int horario;
+    printf("-> Digite o ID da sala: ");
+    scanf("%d", &id_sala);
+    printf("-> Digite o horário a ser indisponibilizado (0 a %d): ", Cinema__horario_max);
+    scanf("%d", &horario);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_indisponibilizarSalaEmHorarios(id_sala, horario, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__IndisponibilizarSalaEmHorarios(id_sala, horario);
+        printf("✅ SUCESSO: Sala %d indisponibilizada no horário %dh.\n", id_sala, horario);
+    }
+    else
+    {
+        printf("❌ FALHA: A pré-condição não foi atendida. Verifique se a função está implementada e se os dados são válidos.\n");
+    }
+}
+
+void handle_adicionar_sessao()
+{
+    Cinema__SALA id_sala;
+    int horario;
+    Cinema__FILME id_filme;
+
+    printf("-> Digite o ID da sala: ");
+    scanf("%d", &id_sala);
+    printf("-> Digite o horário da sessão: ");
+    scanf("%d", &horario);
+    printf("-> Digite o ID do filme: ");
+    scanf("%d", &id_filme);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_adicionarSessao(id_sala, horario, id_filme, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__AdicionarSessao(id_sala, horario, id_filme);
+        printf("✅ SUCESSO: Sessão adicionada.\n");
+    }
+    else
+    {
+        printf("❌ FALHA: A pré-condição não foi atendida. Verifique se a função está implementada e se os dados são válidos.\n");
+    }
+}
+
+void handle_remover_sessao()
+{
+    Cinema__SALA id_sala;
+    int horario;
+
+    printf("-> Digite o ID da sala: ");
+    scanf("%d", &id_sala);
+    printf("-> Digite o horário da sessão a ser removida: ");
+    scanf("%d", &horario);
+
+    bool pre_condicao_ok = false;
+    Cinema__pre_removerSessao(id_sala, horario, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__RemoverSessao(id_sala, horario);
+        printf("✅ SUCESSO: Sessão removida.\n");
+    }
+    else
+    {
+        printf("❌ FALHA: A pré-condição não foi atendida. Verifique se a função está implementada e se os dados são válidos.\n");
+    }
+}
+
+void handle_comprar_ingresso()
+{
+    Cinema__FILME id_filme;
+    int horario, tipo_int, quantidade;
+    Cinema__TIPO_INGRESSO tipo_ingresso;
+
+    printf("-> Digite o ID do filme: ");
+    scanf("%d", &id_filme);
+    printf("-> Digite o horário da sessão: ");
+    scanf("%d", &horario);
+    printf("-> Digite o tipo de ingresso (0 para Meia, 1 para Inteira): ");
+    scanf("%d", &tipo_int);
+    printf("-> Digite a quantidade de ingressos: ");
+    scanf("%d", &quantidade);
+
+    if (tipo_int == 0)
+    {
+        tipo_ingresso = Cinema__meia;
+    }
+    else if (tipo_int == 1)
+    {
+        tipo_ingresso = Cinema__inteira;
+    }
+    else
+    {
+        printf("❌ FALHA: Tipo de ingresso inválido.\n");
+        return;
+    }
+
+    bool pre_condicao_ok = false;
+    // O último parâmetro 'aa' em ComprarIngresso não está claro, usamos a quantidade aqui.
+    // A pre_comprarIngresso tem uma assinatura diferente, adaptamos para o que faz sentido.
+    Cinema__pre_comprarIngresso(id_filme, horario, tipo_ingresso, &pre_condicao_ok);
+
+    if (pre_condicao_ok)
+    {
+        Cinema__ComprarIngresso(id_filme, horario, tipo_ingresso, quantidade);
+        printf("✅ SUCESSO: Compra de %d ingresso(s) realizada.\n", quantidade);
+    }
+    else
+    {
+        printf("❌ FALHA: A pré-condição não foi atendida. Verifique se a função está implementada e se os dados são válidos.\n");
+    }
 }

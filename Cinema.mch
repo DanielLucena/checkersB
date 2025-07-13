@@ -16,6 +16,9 @@ PROPERTIES
    & limit_filmes : NAT1
    & limit_turnos : NAT1
    & horario_max: NAT1
+   
+
+   
    //CORRECAO: Horário tem que ser uma constante
     //Solucao: 24 horas 
 //   & HORARIO <: NAT
@@ -65,9 +68,14 @@ INVARIANT
      //5. Invarintes de sessão
      //CORRECAO: Inserir o conceito de assento marcado para a sessão
          & sessao : salaHasHorarios +-> filmes
-         & ingressos_vendidos : sessao --> 0..limit_capacidade
-         & ingressos_meia : sessao --> 0..(limit_capacidade/2)
-         & acentos_sessao : sessao --> (0..limit_capacidade-1 +-> BOOL)
+         & ingressos_vendidos : salaHasHorarios +-> 0..limit_capacidade
+         & dom(sessao) = dom(ingressos_vendidos)
+         & ingressos_meia : salaHasHorarios +-> 0..(limit_capacidade/2)
+         & dom(sessao) = dom(ingressos_meia)
+         & acentos_sessao : salaHasHorarios +-> (0..limit_capacidade-1 +-> BOOL)
+         & dom(sessao) = dom(acentos_sessao)
+         
+         
          & !ff .(ff : FILME => !hh .(hh : HORARIO => 
          card({ss | ss : SALA 
               & (ss |-> hh) : dom(sessao) 
@@ -75,19 +83,19 @@ INVARIANT
               ) <= 1))
         
     //6. Invariantes de ingressos
-        //Para toda sessao
+       //Para toda sessao
         & !(ss, hh) . 
         (ss:SALA & hh:HORARIO & (ss|->hh):dom(sessao) =>
-            ingressos_vendidos( (ss|->hh) |-> sessao(ss|->hh) ) <= salaHasCapacidade(ss)
+            ingressos_vendidos( (ss|->hh) ) <= salaHasCapacidade(ss)
 
-            & ingressos_meia((ss|->hh) |-> sessao(ss|->hh)) <= 
+            & ingressos_meia((ss|->hh) ) <= 
         salaHasCapacidade(ss)/2
 
 //            & ingressos_ofertados((ss|->hh) |-> sessao(ss|->hh)) = 
 //        salaHasCapacidade(ss)
 
-            & ingressos_meia((ss|->hh)|->sessao(ss|->hh)) 
-                <= ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
+            & ingressos_meia((ss|->hh)) 
+                <= ingressos_vendidos((ss|->hh))
             )
 
          
@@ -197,40 +205,24 @@ OPERATIONS
        & !s2 .(s2 : SALA & (s2 |-> hh) : dom(sessao) => sessao(s2 |-> hh) /= ff)
     THEN
        sessao := sessao \/ {(ss|->hh)|->ff} 
-       || ingressos_vendidos:= ingressos_vendidos \/ {((ss|->hh)|->ff)|->0} 
-       || ingressos_meia := ingressos_meia \/ {((ss|->hh)|->ff)|->0}
+       || ingressos_vendidos:= ingressos_vendidos \/ {(ss|->hh)|->0} 
+       || ingressos_meia := ingressos_meia \/ {(ss|->hh)|->0}
        || acentos_sessao := acentos_sessao 
-           \/ {((ss|->hh)|->ff)|-> ((0..limit_capacidade-1)*{FALSE})}
+           \/ {(ss|->hh)|-> ((0..limit_capacidade-1)*{FALSE})}
     END;
     
-    RemoverSessao(ss,hh) =
+ RemoverSessao(ss,hh) =
     PRE
        ss:SALA & hh: HORARIO
        & ss:salas & ss|->hh : salaHasHorarios 
        & ss|->hh : dom(sessao) 
-       & ingressos_vendidos((ss|->hh)|->sessao((ss|->hh))) =0
+       & ingressos_vendidos((ss|->hh)) =0
     THEN
        sessao :=  {ss|->hh} <<| sessao 
-       || ingressos_vendidos:= {(ss|->hh)|->sessao((ss|->hh))} <<|  ingressos_vendidos 
-       || ingressos_meia := {(ss|->hh)|->sessao((ss|->hh))} <<|  ingressos_meia 
-       || acentos_sessao := {(ss|->hh)|->sessao((ss|->hh))} <<| acentos_sessao
+       || ingressos_vendidos:= {(ss|->hh)} <<|  ingressos_vendidos 
+       || ingressos_meia := {(ss|->hh)} <<|  ingressos_meia 
+       || acentos_sessao := {(ss|->hh)} <<| acentos_sessao
     END;
-  
-     //CORRECAO: Remover tipos abstratos da assinatura das operações
-    //Solucao: trocar sequencia por array
-//    vv <-- QuerySessao =
-//    PRE sessao /= {}
-//    THEN
-//        ANY ff WHERE
-//            ff : 0..card(sessao)-1 +-> (SALA*HORARIO)*FILME &
-//            ran(ff) = sessao
-//        THEN
-//            vv := ran(ff)
-//        END
-//    END;
-    
-//    vv <-- QuerySessao_1 =
-//    skip;
 
 
     // Ingresso
@@ -245,21 +237,21 @@ OPERATIONS
        (ss : SALA 
            & (ss |-> hh) : dom(sessao) 
            & sessao(ss |-> hh) = ff 
-           & ingressos_vendidos((ss|->hh)|->ff ) < salaHasCapacidade(ss)
-           & (tt=meia => ingressos_meia((ss|->hh)|->ff) < (salaHasCapacidade(ss)/2))
-           & (aa|->FALSE): acentos_sessao((ss |-> hh)|->ff )
+            & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)
+           & (tt=meia => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
+           & (aa|->FALSE): acentos_sessao(ss |-> hh)
        )
        & hh >= horaAtual
     THEN
     ANY ss
     WHERE ss : SALA & (ss |-> hh) : dom(sessao) & sessao(ss |-> hh) = ff
     THEN
-       ingressos_vendidos((ss|->hh)|->ff) := ingressos_vendidos((ss|->hh)|->ff) +1
-       || acentos_sessao((ss |-> hh)|->ff ) := 
-       acentos_sessao((ss |-> hh)|->ff ) <+ {aa|->TRUE}
+      ingressos_vendidos(ss|->hh) := ingressos_vendidos(ss|->hh) +1
+       || acentos_sessao(ss |-> hh) := 
+       acentos_sessao(ss |-> hh) <+ {aa|->TRUE}
        || 
        IF tt=meia
-       THEN ingressos_meia((ss|->hh)|->ff) := ingressos_meia((ss|->hh)|->ff) +1
+      THEN ingressos_meia(ss|->hh) := ingressos_meia(ss|->hh) +1
        ELSE skip
            END
        END
@@ -286,17 +278,17 @@ OPERATIONS
     PRE ss:SALA & hh:HORARIO 
        & ss:salas & ss|->hh : salaHasHorarios 
        & ss|->hh : dom(sessao)
-       & (ss|->hh)|->sessao(ss|->hh) : dom(ingressos_vendidos)
+      & (ss|->hh) : dom(ingressos_vendidos)
     THEN ii := salaHasCapacidade(ss)
-             - ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
+             - ingressos_vendidos(ss|->hh)
     END;
     
     ii<--ConsultarIngressosCompradosPorSessao(ss,hh)=
     PRE ss:SALA & hh:HORARIO 
        & ss:salas & ss|->hh : salaHasHorarios 
        & ss|->hh : dom(sessao)
-       & (ss|->hh)|->sessao(ss|->hh) : dom(ingressos_vendidos)
-    THEN ii := ingressos_vendidos((ss|->hh)|->sessao(ss|->hh))
+       & (ss|->hh) : dom(ingressos_vendidos)
+    THEN ii := ingressos_vendidos(ss|->hh)
     END;
     
     //CORRECAO: Remover tipos abstratos da assinatura das operações
@@ -384,17 +376,6 @@ OPERATIONS
       END
    END;
    
-   ok <-- pre_disponibilizarSalaEmHorarios(ss, hh) =
-   PRE ss : SALA & hh : HORARIO
-   THEN
-       IF ss : salas &
-          hh : HORARIO &
-          (ss |-> hh) /: salaHasHorarios &
-          card({ss} <| salaHasHorarios) < limit_turnos
-       THEN ok := TRUE
-       ELSE ok := FALSE
-       END
-   END;
 
    ok <-- pre_indisponibilizarSalaEmHorarios(ss, hh) =
    PRE ss : SALA & hh : HORARIO
@@ -419,16 +400,22 @@ OPERATIONS
        ELSE ok := FALSE
        END
    END;
+   
+       ok <-- pre_removerSessao(ss, hh) =
+    PRE
+        ss:SALA & hh:HORARIO
+    THEN
+        IF ss: salas 
+           & ss|->hh : salaHasHorarios 
+           & ss|->hh : dom(sessao) 
+           & ingressos_vendidos(ss |-> hh) = 0
+        THEN
+            ok := TRUE
+        ELSE
+            ok := FALSE
+        END
+    END;
 
-   ok <-- pre_removerSessao(ss, hh) =
-   PRE ss : SALA & hh : HORARIO
-   THEN
-       IF (ss |-> hh) : dom(sessao) &
-          ingressos_vendidos((ss |-> hh) |-> sessao(ss |-> hh)) = 0
-       THEN ok := TRUE
-       ELSE ok := FALSE
-       END
-   END;
    
    ok <-- pre_comprarIngresso(ff, hh, tt) =
    PRE ff : FILME & hh : HORARIO & tt : TIPO_INGRESSO
@@ -439,16 +426,14 @@ OPERATIONS
               ss : SALA &
               (ss |-> hh) : dom(sessao) &
               sessao(ss |-> hh) = ff &
-              ingressos_vendidos((ss |-> hh) |-> ff) < salaHasCapacidade(ss) &
-              (tt = meia => ingressos_meia((ss |-> hh) |-> ff) < salaHasCapacidade(ss) / 2)
+              ingressos_vendidos(ss |-> hh) < salaHasCapacidade(ss) &
+              (tt = meia => ingressos_meia(ss |-> hh) < salaHasCapacidade(ss) / 2)
           )
        THEN ok := TRUE
        ELSE ok := FALSE
        END
    END;
    
-
-
    ok <-- pre_consultarIngressosPorSessao(ss, hh) =
    PRE ss : SALA & hh : HORARIO
    THEN
@@ -459,7 +444,7 @@ OPERATIONS
    END;
    
    
-   ok <-- pre_DisponibilizarSalaEmHorarios(ss,hh) = 
+   ok <-- pre_disponibilizarSalaEmHorarios(ss,hh) = 
     PRE
        ss:SALA & hh:HORARIO 
     THEN
@@ -472,54 +457,6 @@ OPERATIONS
        ELSE
            ok := FALSE
        END
-   END;
-   
-   ok <-- pre_IndisponibilizarSalaEmHorarios(ss, hh) =
-    PRE
-        ss:SALA & hh:HORARIO
-    THEN
-        IF ss: salas 
-           & {ss|->hh} /\ salaHasHorarios /= {} 
-           & (ss|->hh) /: dom(sessao)
-        THEN
-            ok := TRUE
-        ELSE
-            ok := FALSE
-        END
-    END;
-    
-    ok <-- pre_AdicionarSessao(ss, hh, ff) =
-    PRE
-        ss:SALA & hh:HORARIO & ff:FILME
-    THEN
-        IF ss: salas 
-           & ff: filmes 
-           & ss|->hh : salaHasHorarios 
-           & ss|->hh /: dom(sessao)
-           & (!s2 . (s2: SALA & (s2 |-> hh) : dom(sessao) => sessao(s2 |-> hh) /= ff))
-        THEN
-            ok := TRUE
-        ELSE
-            ok := FALSE
-        END
-    END;
-    
-    ok <-- pre_RemoverSessao(ss, hh) =
-    PRE
-        ss:SALA & hh:HORARIO
-    THEN
-        IF ss: salas 
-           & ss|->hh : salaHasHorarios 
-           & ss|->hh : dom(sessao) 
-           & ingressos_vendidos((ss|->hh)|->sessao((ss|->hh))) = 0
-        THEN
-            ok := TRUE
-        ELSE
-            ok := FALSE
-        END
-    END
-
-
-
-   
+   END
+      
 END
