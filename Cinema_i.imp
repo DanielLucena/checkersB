@@ -13,7 +13,7 @@ CONCRETE_VARIABLES
     ,salaHasCapacidade_i
     ,salaHasHorarios_i
     , sessao_i
-//    ,ingressos_vendidos_i
+    ,ingressos_vendidos_i
 //    ,ingressos_meia_i
 
 
@@ -68,7 +68,7 @@ INVARIANT
     // Refinamento dos dados de ingressos e assentos
     //todo: falta especificar cada um deles ainda e relacionar com a maquina abstrata
     //todo: talvez usar a ideia de dummy colocando o dummy como zero e  toda operacao ele checa primeiro se é o dummy se for ai ele coloca 1 se n for o dummy ele so vai somando normal, teria que toda vez q zerar o dia ele iria para o dummy.
-//    & ingressos_vendidos_i : SALA * HORARIO --> ASSENTO
+    & ingressos_vendidos_i : SALA * HORARIO --> ASSENTO
 //    & ingressos_meia_i : SALA * HORARIO --> 0..limit_capacidade
 //    & acentos_sessao_i : SALA*HORARIO *FILME --> (0..limit_capacidade)   
 
@@ -110,8 +110,8 @@ INITIALISATION
     sessao_i := (SALA*HORARIO)*{dummyFilme};
     
 
-    horaAtual_i := 0
-//    ingressos_vendidos_i := (SALA * HORARIO) * {dummyAssento};
+    horaAtual_i := 0;
+    ingressos_vendidos_i := (SALA * HORARIO) * {dummyAssento}
 //    ingressos_meia_i := (SALA * HORARIO) * {0}
 //    acentos_sessao_i := ((SALA*HORARIO)*{dummyFilme}) *(0..limit_capacidade)
 
@@ -238,8 +238,7 @@ OPERATIONS
     
     RemoverSessao(ss,hh) =
     BEGIN
-//        sessao_i(ss, hh) := dummyFilme
-    skip
+        sessao_i(ss, hh) := dummyFilme
     END;
      
 
@@ -274,6 +273,8 @@ OPERATIONS
     ii<--ConsultarIngressosCompradosPorSessao(ss,hh)=
      skip;
 
+
+//OK
 rr <-- visualizarFilmesEmCartaz =
   BEGIN
     VAR sala, horario, filmeSessao IN
@@ -312,13 +313,61 @@ rr <-- visualizarFilmesEmCartaz =
 //    skip;
 
    
+   //todo: REVER
    rr <-- VisualizarFilmesPorHorario(hh) =
-       rr := FILME*{FALSE};
-//    skip;
-
-     rr <-- VisualizarHorariosPorFilme(ff) =
-         rr := HORARIO*{FALSE};
-//    skip;
+   BEGIN
+     VAR sala, filmeSessao IN
+       sala := 0;
+       rr := FILME * {FALSE};
+ 
+       WHILE sala < limit_salas DO
+         filmeSessao := sessao_i(sala, hh);
+         IF filmeSessao /= dummyFilme THEN
+           rr(filmeSessao) := TRUE
+         END;
+         sala := sala + 1
+       INVARIANT
+         sala : 0..limit_salas
+         & rr : FILME --> BOOL
+         & !ss.(ss : 0..sala-1 => (sessao_i(ss, hh) /= dummyFilme => rr(sessao_i(ss, hh)) = TRUE))
+       VARIANT
+         limit_salas - sala
+       END
+   END
+   END;
+ 
+   //todo: REVER
+   rr <-- VisualizarHorariosPorFilme(ff) =
+   BEGIN
+     VAR sala, horario, filmeSessao IN
+       sala := 0;
+       rr := HORARIO * {FALSE};
+ 
+       WHILE sala < limit_salas DO
+         horario := 0;
+         WHILE horario < horario_max DO
+           filmeSessao := sessao_i(sala, horario);
+           IF filmeSessao = ff THEN
+             rr(horario) := TRUE
+           END;
+           horario := horario + 1
+         INVARIANT
+           horario : 0..horario_max
+           & rr : HORARIO --> BOOL
+           & !hh.(hh : 0..horario-1 => (sessao_i(sala, hh) = ff => rr(hh) = TRUE))
+         VARIANT
+           horario_max - horario
+         END;
+         sala := sala + 1
+       INVARIANT
+         sala : 0..limit_salas
+         & rr : HORARIO --> BOOL
+         & !(ss,hh).(ss : 0..sala-1 & hh : 0..horario_max-1 => (sessao_i(ss, hh) = ff => rr(hh) = TRUE))
+       VARIANT
+         limit_salas - sala
+       END
+   END
+   END;
 
    
    ok<-- pre_adicionarFilme(ff) =
@@ -333,7 +382,6 @@ rr <-- visualizarFilmesEmCartaz =
         
     END;
      
-   //todo : ff/= ran(sessao_i)
    ok <-- pre_removerFilme(ff) =
   BEGIN
     VAR filme, ii, jj, emSessao, filmeAtual IN
@@ -475,7 +523,7 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
                 DO
                 VAR filmeSalaAtual IN
                     filmeSalaAtual := sessao_i(ii, hh);
-                    IF filmeSalaAtual = filmeAtual 
+                    IF filmeSalaAtual = ff 
                     THEN passandoEmOutraSala := TRUE
                     END;
                     ii := ii + 1
@@ -520,4 +568,4 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
    ok <-- pre_consultarIngressosPorSessao(ss, hh) =
     skip
 
- END
+END
