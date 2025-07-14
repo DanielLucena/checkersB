@@ -276,6 +276,12 @@ OPERATIONS
           END
       END;
       
+      
+      ii<--query_Passar_Hora=
+      BEGIN
+          ii:= horaAtual
+      END;
+      
       //Querrys mais complexas
     
     ii<--ConsultarIngressosDisponiveisPorSessao(ss,hh)=

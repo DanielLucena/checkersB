@@ -278,6 +278,12 @@ OPERATIONS
       END;
       
       
+      ii<--query_Passar_Hora=
+      BEGIN
+          ii:= horaAtual_i
+      END;
+      
+      
     // Ingresso
     //TODO: REVER ISSO E PRINCIPALMENTE O INVARIANTE
 ComprarIngresso(ff,hh,tt,aa)=
