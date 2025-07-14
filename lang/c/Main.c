@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "Cinema.h" // Inclui o seu header exato
+#include "Cinema_i.c" // Inclui o seu header exato
 // Adicionado para garantir que as constantes de tipo de ingresso estejam definidas
 #ifndef Cinema__meia
 #define Cinema__meia 0
@@ -103,29 +103,66 @@ int main()
         if (scanf("%d", &escolha) != 1)
         {
             printf("\n>>> ERRO: Entrada inválida. Por favor, digite um número.\n");
-            while (getchar() != '\n');
+            while (getchar() != '\n')
+                ;
             continue;
         }
         switch (escolha)
         {
-        case 1:  handle_adicionar_filme(); break;
-        case 2:  handle_remover_filme(); break;
-        case 3:  handle_adicionar_sala(); break;
-        case 4:  handle_remover_sala(); break;
-        case 5:  handle_disponibilizar_sala(); break;
-        case 6:  handle_indisponibilizar_sala(); break;
-        case 7:  handle_adicionar_sessao(); break;
-        case 8:  handle_remover_sessao(); break;
-        case 9:  handle_comprar_ingresso(); break;
-        case 11: handle_query_filmes(); break;
-        case 12: handle_query_salas(); break;
-        case 13: handle_visualizar_filmes_em_cartaz(); break;
-        case 14: handle_visualizar_filmes_por_horario(); break;
-        case 15: handle_visualizar_horarios_por_filme(); break;
-        case 16: handle_consultar_ingressos_comprados(); break;
-        case 17: handle_consultar_ingressos_disponiveis(); break;
-        case 18: handle_passar_hora(); break;
-        case 19: handle_executar_cenario_teste(); break;
+        case 1:
+            handle_adicionar_filme();
+            break;
+        case 2:
+            handle_remover_filme();
+            break;
+        case 3:
+            handle_adicionar_sala();
+            break;
+        case 4:
+            handle_remover_sala();
+            break;
+        case 5:
+            handle_disponibilizar_sala();
+            break;
+        case 6:
+            handle_indisponibilizar_sala();
+            break;
+        case 7:
+            handle_adicionar_sessao();
+            break;
+        case 8:
+            handle_remover_sessao();
+            break;
+        case 9:
+            handle_comprar_ingresso();
+            break;
+        case 11:
+            handle_query_filmes();
+            break;
+        case 12:
+            handle_query_salas();
+            break;
+        case 13:
+            handle_visualizar_filmes_em_cartaz();
+            break;
+        case 14:
+            handle_visualizar_filmes_por_horario();
+            break;
+        case 15:
+            handle_visualizar_horarios_por_filme();
+            break;
+        case 16:
+            handle_consultar_ingressos_comprados();
+            break;
+        case 17:
+            handle_consultar_ingressos_disponiveis();
+            break;
+        case 18:
+            handle_passar_hora();
+            break;
+        case 19:
+            handle_executar_cenario_teste();
+            break;
         case 0:
             printf("Encerrando o sistema. Até logo! 👋\n");
             return 0;
@@ -144,11 +181,14 @@ bool executar_adicionar_filme(Cinema__FILME id_filme)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_adicionarFilme(id_filme, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__AdicionarFilme(id_filme);
         printf("✅ SUCESSO: Filme %d adicionado.\n", id_filme);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível adicionar o filme %d (já existe, é inválido ou limite atingido).\n", id_filme);
         return false;
     }
@@ -158,11 +198,14 @@ bool executar_remover_filme(Cinema__FILME id_filme)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_removerFilme(id_filme, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__RemoverFilme(id_filme);
         printf("✅ SUCESSO: Filme %d removido.\n", id_filme);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível remover o filme %d (não existe ou está em sessão).\n", id_filme);
         return false;
     }
@@ -172,11 +215,14 @@ bool executar_adicionar_sala(Cinema__SALA id_sala, int capacidade)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_adicionarSala(id_sala, capacidade, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__AdicionarSala(id_sala, capacidade);
         printf("✅ SUCESSO: Sala %d com capacidade %d adicionada.\n", id_sala, capacidade);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível adicionar a sala %d (já existe, capacidade inválida ou limite atingido).\n", id_sala);
         return false;
     }
@@ -186,11 +232,14 @@ bool executar_remover_sala(Cinema__SALA id_sala)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_removerSala(id_sala, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__RemoverSala(id_sala);
         printf("✅ SUCESSO: Sala %d removida.\n", id_sala);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível remover a sala %d (não existe ou tem horários disponíveis).\n", id_sala);
         return false;
     }
@@ -200,11 +249,14 @@ bool executar_disponibilizar_sala(Cinema__SALA id_sala, int horario)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_disponibilizarSalaEmHorarios(id_sala, horario, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__DisponibilizarSalaEmHorarios(id_sala, horario);
         printf("✅ SUCESSO: Sala %d disponibilizada no horário %dh.\n", id_sala, horario);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível disponibilizar a sala %d no horário %dh (sala não existe, horário já disponível ou limite de turnos atingido).\n", id_sala, horario);
         return false;
     }
@@ -214,11 +266,14 @@ bool executar_indisponibilizar_sala(Cinema__SALA id_sala, int horario)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_indisponibilizarSalaEmHorarios(id_sala, horario, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__IndisponibilizarSalaEmHorarios(id_sala, horario);
         printf("✅ SUCESSO: Sala %d indisponibilizada no horário %dh.\n", id_sala, horario);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível indisponibilizar a sala %d no horário %dh (sala/horário não disponível ou há uma sessão agendada).\n", id_sala, horario);
         return false;
     }
@@ -228,11 +283,14 @@ bool executar_adicionar_sessao(Cinema__SALA id_sala, int horario, Cinema__FILME 
 {
     bool pre_condicao_ok = false;
     Cinema__pre_adicionarSessao(id_sala, horario, id_filme, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__AdicionarSessao(id_sala, horario, id_filme);
         printf("✅ SUCESSO: Sessão adicionada (Filme %d, Sala %d, %dh).\n", id_filme, id_sala, horario);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível adicionar a sessão (sala/horário indisponível, já ocupado ou filme já em exibição no mesmo horário).\n");
         return false;
     }
@@ -242,11 +300,14 @@ bool executar_remover_sessao(Cinema__SALA id_sala, int horario)
 {
     bool pre_condicao_ok = false;
     Cinema__pre_removerSessao(id_sala, horario, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__RemoverSessao(id_sala, horario);
         printf("✅ SUCESSO: Sessão da sala %d no horário %dh removida.\n", id_sala, horario);
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível remover a sessão (não existe ou possui ingressos vendidos).\n");
         return false;
     }
@@ -259,11 +320,14 @@ bool executar_comprar_ingresso(Cinema__FILME id_filme, int horario, Cinema__TIPO
 {
     bool pre_condicao_ok = false;
     Cinema__pre_comprarIngresso(id_filme, horario, tipo, assento, &pre_condicao_ok);
-    if (pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         Cinema__ComprarIngresso(id_filme, horario, tipo, assento);
         printf("✅ SUCESSO: Compra realizada para o filme %d às %dh (Tipo: %s).\n", id_filme, horario, (tipo == Cinema__meia ? "Meia" : "Inteira"));
         return true;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível comprar ingresso (sessão não existe, horário já passou, ingressos esgotados ou limite de meia-entrada atingido).\n");
         return false;
     }
@@ -275,13 +339,16 @@ int executar_query_filmes()
     Cinema__QueryFilmes(filmes_cadastrados);
     printf("\n--- 🎬 Filmes Atualmente Cadastrados 🎬 ---\n");
     int contador = 0;
-    for (int i = 0; i <= Cinema__limit_filmes; i++) {
-        if (filmes_cadastrados[i] == true) {
+    for (int i = 0; i <= Cinema__limit_filmes; i++)
+    {
+        if (filmes_cadastrados[i] == true)
+        {
             printf(" -> Filme com ID: %d\n", i);
             contador++;
         }
     }
-    if (contador == 0) {
+    if (contador == 0)
+    {
         printf(" -> Nenhum filme cadastrado no momento.\n");
     }
     printf("-------------------------------------------\n");
@@ -294,13 +361,16 @@ int executar_query_salas()
     Cinema__QuerySalas(salas_cadastradas);
     printf("\n--- 🏛️  Salas Cadastradas no Sistema 🏛️  ---\n");
     int contador = 0;
-    for (int i = 0; i <= Cinema__limit_salas; i++) {
-        if (salas_cadastradas[i] == true) {
+    for (int i = 0; i <= Cinema__limit_salas; i++)
+    {
+        if (salas_cadastradas[i] == true)
+        {
             printf(" -> Sala com ID: %d\n", i);
             contador++;
         }
     }
-    if (contador == 0) {
+    if (contador == 0)
+    {
         printf(" -> Nenhuma sala cadastrada no momento.\n");
     }
     printf("-------------------------------------------\n");
@@ -313,13 +383,16 @@ int executar_visualizar_filmes_em_cartaz()
     Cinema__visualizarFilmesEmCartaz(filmes_com_sessao);
     printf("\n--- 🍿 Filmes com Sessões Agendadas (Em Cartaz) 🍿 ---\n");
     int contador = 0;
-    for (int i = 0; i <= Cinema__limit_filmes; i++) {
-        if (filmes_com_sessao[i] == true) {
+    for (int i = 0; i <= Cinema__limit_filmes; i++)
+    {
+        if (filmes_com_sessao[i] == true)
+        {
             printf(" -> Filme com ID: %d\n", i);
             contador++;
         }
     }
-    if (contador == 0) {
+    if (contador == 0)
+    {
         printf(" -> Nenhum filme com sessão agendada no momento.\n");
     }
     printf("-------------------------------------------------------\n");
@@ -332,13 +405,16 @@ int executar_visualizar_filmes_por_horario(int horario)
     Cinema__VisualizarFilmesPorHorario(horario, filmes_encontrados);
     printf("\n--- 🎞️  Filmes em Exibição às %dh 🎞️  ---\n", horario);
     int contador = 0;
-    for (int i = 0; i <= Cinema__limit_filmes; i++) {
-        if (filmes_encontrados[i] == true) {
+    for (int i = 0; i <= Cinema__limit_filmes; i++)
+    {
+        if (filmes_encontrados[i] == true)
+        {
             printf(" -> Filme com ID: %d\n", i);
             contador++;
         }
     }
-    if (contador == 0) {
+    if (contador == 0)
+    {
         printf(" -> Nenhum filme sendo exibido neste horário.\n");
     }
     printf("------------------------------------------\n");
@@ -351,49 +427,61 @@ int executar_visualizar_horarios_por_filme(Cinema__FILME id_filme)
     Cinema__VisualizarHorariosPorFilme(id_filme, horarios_encontrados);
     printf("\n--- 🕒 Horários para o Filme %d 🕒 ---\n", id_filme);
     int contador = 0;
-    for (int i = 0; i <= Cinema__horario_max; i++) {
-        if (horarios_encontrados[i] == true) {
+    for (int i = 0; i <= Cinema__horario_max; i++)
+    {
+        if (horarios_encontrados[i] == true)
+        {
             printf(" -> Sessão às: %dh\n", i);
             contador++;
         }
     }
-    if (contador == 0) {
+    if (contador == 0)
+    {
         printf(" -> Nenhuma sessão encontrada para este filme.\n");
     }
     printf("---------------------------------------\n");
     return contador;
 }
 
-void executar_passar_hora() {
+void executar_passar_hora()
+{
     Cinema__Passar_Hora();
     int hora_atual = -1;
     Cinema__query_Passar_Hora(&hora_atual);
     printf("✅ SUCESSO: Hora do sistema avançada para %dh.\n", hora_atual);
 }
 
-int executar_consultar_ingressos_comprados(Cinema__SALA id_sala, int horario) {
+int executar_consultar_ingressos_comprados(Cinema__SALA id_sala, int horario)
+{
     bool pre_condicao_ok = false;
     Cinema__pre_consultarIngressosCompradosPorSessao(id_sala, horario, &pre_condicao_ok);
-    if(pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         int qtd = -1;
         Cinema__ConsultarIngressosCompradosPorSessao(id_sala, horario, &qtd);
         printf("📊 INFO: %d ingressos comprados para a sessão na sala %d às %dh.\n", qtd, id_sala, horario);
         return qtd;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível consultar. Sessão na sala %d às %dh não existe.\n", id_sala, horario);
         return -1;
     }
 }
 
-int executar_consultar_ingressos_disponiveis(Cinema__SALA id_sala, int horario) {
+int executar_consultar_ingressos_disponiveis(Cinema__SALA id_sala, int horario)
+{
     bool pre_condicao_ok = false;
     Cinema__pre_consultarIngressosDisponiveisPorSessao(id_sala, horario, &pre_condicao_ok);
-    if(pre_condicao_ok) {
+    if (pre_condicao_ok)
+    {
         int qtd = -1;
         Cinema__ConsultarIngressosDisponiveisPorSessao(id_sala, horario, &qtd);
         printf("📊 INFO: %d ingressos disponíveis para a sessão na sala %d às %dh.\n", qtd, id_sala, horario);
         return qtd;
-    } else {
+    }
+    else
+    {
         printf("❌ FALHA: Não foi possível consultar. Sessão na sala %d às %dh não existe.\n", id_sala, horario);
         return -1;
     }
@@ -402,38 +490,43 @@ int executar_consultar_ingressos_disponiveis(Cinema__SALA id_sala, int horario) 
 // =============================================================================
 //                 FUNÇÕES HANDLE (INTERFACE COM USUÁRIO)
 // =============================================================================
-void handle_adicionar_filme() {
+void handle_adicionar_filme()
+{
     Cinema__FILME id_filme;
     printf("-> Digite o ID do filme para adicionar (1 a %d): ", Cinema__limit_filmes);
     scanf("%d", &id_filme);
     executar_adicionar_filme(id_filme);
 }
 
-void handle_remover_filme() {
+void handle_remover_filme()
+{
     Cinema__FILME id_filme;
     printf("-> Digite o ID do filme para remover (1 a %d): ", Cinema__limit_filmes);
     scanf("%d", &id_filme);
     executar_remover_filme(id_filme);
 }
 
-void handle_adicionar_sala() {
+void handle_adicionar_sala()
+{
     Cinema__SALA id_sala;
     int capacidade;
-    printf("-> Digite o ID da sala para adicionar (0 a %d): ", Cinema__limit_salas - 1);
+    printf("-> Digite o ID da sala para adicionar (0 a %d): ", Cinema__limit_salas);
     scanf("%d", &id_sala);
     printf("-> Digite a capacidade da sala (1 a %d): ", Cinema__limit_capacidade);
     scanf("%d", &capacidade);
     executar_adicionar_sala(id_sala, capacidade);
 }
 
-void handle_remover_sala() {
+void handle_remover_sala()
+{
     Cinema__SALA id_sala;
-    printf("-> Digite o ID da sala para remover (0 a %d): ", Cinema__limit_salas - 1);
+    printf("-> Digite o ID da sala para remover (0 a %d): ", Cinema__limit_salas);
     scanf("%d", &id_sala);
     executar_remover_sala(id_sala);
 }
 
-void handle_disponibilizar_sala() {
+void handle_disponibilizar_sala()
+{
     Cinema__SALA id_sala;
     int horario;
     printf("-> Digite o ID da sala: ");
@@ -443,7 +536,8 @@ void handle_disponibilizar_sala() {
     executar_disponibilizar_sala(id_sala, horario);
 }
 
-void handle_indisponibilizar_sala() {
+void handle_indisponibilizar_sala()
+{
     Cinema__SALA id_sala;
     int horario;
     printf("-> Digite o ID da sala: ");
@@ -453,7 +547,8 @@ void handle_indisponibilizar_sala() {
     executar_indisponibilizar_sala(id_sala, horario);
 }
 
-void handle_adicionar_sessao() {
+void handle_adicionar_sessao()
+{
     Cinema__SALA id_sala;
     int horario;
     Cinema__FILME id_filme;
@@ -466,7 +561,8 @@ void handle_adicionar_sessao() {
     executar_adicionar_sessao(id_sala, horario, id_filme);
 }
 
-void handle_remover_sessao() {
+void handle_remover_sessao()
+{
     Cinema__SALA id_sala;
     int horario;
     printf("-> Digite o ID da sala: ");
@@ -476,7 +572,8 @@ void handle_remover_sessao() {
     executar_remover_sessao(id_sala, horario);
 }
 
-void handle_comprar_ingresso() {
+void handle_comprar_ingresso()
+{
     Cinema__FILME id_filme;
     int horario, tipo_int;
     Cinema__TIPO_INGRESSO tipo_ingresso;
@@ -486,11 +583,14 @@ void handle_comprar_ingresso() {
     scanf("%d", &horario);
     printf("-> Digite o tipo de ingresso (0 para Meia, 1 para Inteira): ");
     scanf("%d", &tipo_int);
-    
-    int assento_dummy = 0; 
-    if (tipo_int == 0) tipo_ingresso = Cinema__meia;
-    else if (tipo_int == 1) tipo_ingresso = Cinema__inteira;
-    else {
+
+    int assento_dummy = 0;
+    if (tipo_int == 0)
+        tipo_ingresso = Cinema__meia;
+    else if (tipo_int == 1)
+        tipo_ingresso = Cinema__inteira;
+    else
+    {
         printf("❌ FALHA: Tipo de ingresso inválido.\n");
         return;
     }
@@ -501,25 +601,29 @@ void handle_query_filmes() { executar_query_filmes(); }
 void handle_query_salas() { executar_query_salas(); }
 void handle_visualizar_filmes_em_cartaz() { executar_visualizar_filmes_em_cartaz(); }
 
-void handle_visualizar_filmes_por_horario() {
+void handle_visualizar_filmes_por_horario()
+{
     int horario;
     printf("-> Digite o horário para consultar (0 a %d): ", Cinema__horario_max);
     scanf("%d", &horario);
     executar_visualizar_filmes_por_horario(horario);
 }
 
-void handle_visualizar_horarios_por_filme() {
+void handle_visualizar_horarios_por_filme()
+{
     Cinema__FILME id_filme;
     printf("-> Digite o ID do filme para consultar (1 a %d): ", Cinema__limit_filmes);
     scanf("%d", &id_filme);
     executar_visualizar_horarios_por_filme(id_filme);
 }
 
-void handle_passar_hora() {
+void handle_passar_hora()
+{
     executar_passar_hora();
 }
 
-void handle_consultar_ingressos_comprados() {
+void handle_consultar_ingressos_comprados()
+{
     Cinema__SALA id_sala;
     int horario;
     printf("-> Digite o ID da sala: ");
@@ -529,7 +633,8 @@ void handle_consultar_ingressos_comprados() {
     executar_consultar_ingressos_comprados(id_sala, horario);
 }
 
-void handle_consultar_ingressos_disponiveis() {
+void handle_consultar_ingressos_disponiveis()
+{
     Cinema__SALA id_sala;
     int horario;
     printf("-> Digite o ID da sala: ");
@@ -553,10 +658,10 @@ void handle_executar_cenario_teste()
 {
     printf("\n\n--- 🤖 INICIANDO CENÁRIO DE TESTE AUTOMÁTICO COMPLETO 🤖 ---\n");
     printf("--- Este teste valida tanto os caminhos felizes quanto os de falha. ---\n");
-    
+
     // Zera o estado para um teste limpo
     Cinema__INITIALISATION();
-    
+
     // Parâmetros do Teste
     Cinema__FILME id_filme_teste = 2;
     Cinema__FILME id_filme_teste2 = 4;
@@ -565,7 +670,7 @@ void handle_executar_cenario_teste()
     int capacidade_teste = 10; // Limite de meia-entrada será 5
     int horario_teste = 18;
     int horario_teste2 = 20;
-    
+
     // ETAPA 1: SETUP
     printf("\n--- [ETAPA 1: AÇÃO] Adicionando Itens e Agendando Sessões ---\n");
     if (!executar_adicionar_filme(id_filme_teste) ||
@@ -577,79 +682,116 @@ void handle_executar_cenario_teste()
         !executar_adicionar_sessao(id_sala_teste, horario_teste, id_filme_teste) ||
         !executar_adicionar_sessao(id_sala_teste2, horario_teste2, id_filme_teste2))
     {
-        printf("🔴 TESTE FALHOU: Erro na etapa inicial de setup. Abortando.\n"); return;
+        printf("🔴 TESTE FALHOU: Erro na etapa inicial de setup. Abortando.\n");
+        return;
     }
-    
+
     // ETAPA 2: VERIFICAÇÕES PÓS-AGENDAMENTO
     printf("\n--- [ETAPA 2: VERIFICAÇÃO] Checando as sessões criadas ---\n");
-    if (executar_visualizar_filmes_em_cartaz() != 2) {
-        printf("🔴 TESTE FALHOU: Contagem de filmes em cartaz deveria ser 2.\n"); return;
+    if (executar_visualizar_filmes_em_cartaz() != 2)
+    {
+        printf("🔴 TESTE FALHOU: Contagem de filmes em cartaz deveria ser 2.\n");
+        return;
     }
     printf("✅ SUCESSO: Verificações de sessão passaram.\n");
-    
+
     // ETAPA 3: TESTES DE FALHA (Lógica de Negócio)
     printf("\n--- [ETAPA 3: TESTE DE FALHA] Verificando impedimentos de operações inválidas ---\n");
-    if (executar_remover_filme(id_filme_teste)) {
-        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover filme com sessão ativa!\n"); return;
-    } else printf("✅ SUCESSO ESPERADO: Sistema impediu a remoção do filme em cartaz.\n");
-    if (executar_remover_sala(id_sala_teste)) {
-        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover sala com horário disponibilizado!\n"); return;
-    } else printf("✅ SUCESSO ESPERADO: Sistema impediu a remoção da sala com horário.\n");
-    
+    if (executar_remover_filme(id_filme_teste))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover filme com sessão ativa!\n");
+        return;
+    }
+    else
+        printf("✅ SUCESSO ESPERADO: Sistema impediu a remoção do filme em cartaz.\n");
+    if (executar_remover_sala(id_sala_teste))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover sala com horário disponibilizado!\n");
+        return;
+    }
+    else
+        printf("✅ SUCESSO ESPERADO: Sistema impediu a remoção da sala com horário.\n");
+
     // ETAPA 4: VENDAS ATÉ O LIMITE DA MEIA-ENTRADA
     printf("\n--- [ETAPA 4: AÇÃO] Vendendo ingressos de meia-entrada até o limite de 50%% ---\n");
     int limite_meia = capacidade_teste / 2;
-    for(int i = 0; i < limite_meia; i++) {
-        if (!executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__meia, 0)) {
-            printf("🔴 TESTE FALHOU: Erro ao vender o %dº ingresso de meia-entrada. Abortando.\n", i + 1); return;
+    for (int i = 0; i < limite_meia; i++)
+    {
+        if (!executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__meia, 0))
+        {
+            printf("🔴 TESTE FALHOU: Erro ao vender o %dº ingresso de meia-entrada. Abortando.\n", i + 1);
+            return;
         }
     }
-    if (executar_consultar_ingressos_comprados(id_sala_teste, horario_teste) != limite_meia) {
-        printf("🔴 TESTE FALHOU: A contagem de ingressos comprados deveria ser %d.\n", limite_meia); return;
+    if (executar_consultar_ingressos_comprados(id_sala_teste, horario_teste) != limite_meia)
+    {
+        printf("🔴 TESTE FALHOU: A contagem de ingressos comprados deveria ser %d.\n", limite_meia);
+        return;
     }
     printf("✅ SUCESSO: %d ingressos de meia-entrada vendidos.\n", limite_meia);
 
     // ETAPA 5: TESTE DE FALHA E SUCESSO NA VENDA APÓS LIMITE
     printf("\n--- [ETAPA 5: TESTE DE FALHA] Tentando comprar além do limite de meia-entrada ---\n");
-    if (executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__meia, 0)) {
-        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu comprar meia-entrada além do limite!\n"); return;
-    } else {
+    if (executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__meia, 0))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu comprar meia-entrada além do limite!\n");
+        return;
+    }
+    else
+    {
         printf("✅ SUCESSO ESPERADO: Sistema impediu a compra do %dº ingresso de meia-entrada.\n", limite_meia + 1);
     }
     printf("--- [ETAPA 5.1: TESTE DE SUCESSO] Comprando ingresso de inteira após limite de meia ---\n");
-    if(!executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__inteira, 0)) {
-        printf("🔴 LÓGICA DO SISTEMA FALHOU: Não permitiu comprar ingresso de inteira!\n"); return;
-    } else {
+    if (!executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__inteira, 0))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Não permitiu comprar ingresso de inteira!\n");
+        return;
+    }
+    else
+    {
         printf("✅ SUCESSO ESPERADO: Sistema permitiu a compra de ingresso de inteira.\n");
     }
 
     // ETAPA 6: VERIFICAÇÃO PÓS-VENDAS
     printf("\n--- [ETAPA 6: VERIFICAÇÃO] Checando ingressos após vendas ---\n");
     int total_vendido = limite_meia + 1;
-    if (executar_consultar_ingressos_comprados(id_sala_teste, horario_teste) != total_vendido) {
-        printf("🔴 TESTE FALHOU: A contagem de ingressos comprados deveria ser %d.\n", total_vendido); return;
+    if (executar_consultar_ingressos_comprados(id_sala_teste, horario_teste) != total_vendido)
+    {
+        printf("🔴 TESTE FALHOU: A contagem de ingressos comprados deveria ser %d.\n", total_vendido);
+        return;
     }
-    if (executar_consultar_ingressos_disponiveis(id_sala_teste, horario_teste) != capacidade_teste - total_vendido) {
-        printf("🔴 TESTE FALHOU: A contagem de ingressos disponíveis deveria ser %d.\n", capacidade_teste - total_vendido); return;
+    if (executar_consultar_ingressos_disponiveis(id_sala_teste, horario_teste) != capacidade_teste - total_vendido)
+    {
+        printf("🔴 TESTE FALHOU: A contagem de ingressos disponíveis deveria ser %d.\n", capacidade_teste - total_vendido);
+        return;
     }
     printf("✅ SUCESSO: Vendas e consultas de ingressos funcionaram como esperado.\n");
 
     // ETAPA 7: TESTE DE AVANÇO DE HORA
     printf("\n--- [ETAPA 7: TESTE DE FALHA] Avançando a hora para invalidar compras ---\n");
-    for(int i = 0; i <= horario_teste; i++) {
+    for (int i = 0; i <= horario_teste; i++)
+    {
         executar_passar_hora();
     }
-    if (executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__inteira, 0)) {
-        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu comprar ingresso para sessão que já passou!\n"); return;
-    } else {
+    if (executar_comprar_ingresso(id_filme_teste, horario_teste, Cinema__inteira, 0))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu comprar ingresso para sessão que já passou!\n");
+        return;
+    }
+    else
+    {
         printf("✅ SUCESSO ESPERADO: Sistema impediu a compra para sessão passada.\n");
     }
 
     // ETAPA 8: LIMPEZA E VERIFICAÇÕES FINAIS
     printf("\n--- [ETAPA 8: AÇÃO] Limpando o ambiente de teste ---\n");
-    if (executar_remover_sessao(id_sala_teste, horario_teste)) {
-        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover sessão com ingressos vendidos!\n"); return;
-    } else {
+    if (executar_remover_sessao(id_sala_teste, horario_teste))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover sessão com ingressos vendidos!\n");
+        return;
+    }
+    else
+    {
         printf("✅ SUCESSO ESPERADO: Sistema impediu a remoção de sessão com ingressos.\n");
     }
     if (!executar_remover_sessao(id_sala_teste2, horario_teste2) ||
@@ -657,16 +799,21 @@ void handle_executar_cenario_teste()
         !executar_remover_sala(id_sala_teste2) ||
         !executar_remover_filme(id_filme_teste2))
     {
-        printf("🔴 TESTE FALHOU: Erro na limpeza final de sala e filme. Abortando.\n"); return;
+        printf("🔴 TESTE FALHOU: Erro na limpeza final de sala e filme. Abortando.\n");
+        return;
     }
-    
+
     // ETAPA 9: VERIFICAÇÃO PÓS-LIMPEZA
     printf("\n--- [ETAPA 9: VERIFICAÇÃO FINAL] Checando se o sistema está parcialmente limpo ---\n");
-    if (executar_query_filmes() != 1 || executar_query_salas() != 1) {
-        printf("🔴 TESTE FALHOU: O número de filmes ou salas remanescentes está incorreto.\n"); return;
+    if (executar_query_filmes() != 1 || executar_query_salas() != 1)
+    {
+        printf("🔴 TESTE FALHOU: O número de filmes ou salas remanescentes está incorreto.\n");
+        return;
     }
-     if (executar_visualizar_filmes_em_cartaz() != 1) {
-        printf("🔴 TESTE FALHOU: Ainda há mais de uma sessão em cartaz após a limpeza.\n"); return;
+    if (executar_visualizar_filmes_em_cartaz() != 1)
+    {
+        printf("🔴 TESTE FALHOU: Ainda há mais de uma sessão em cartaz após a limpeza.\n");
+        return;
     }
     printf("\n\n--- ✨ CENÁRIO DE TESTE CONCLUÍDO COM SUCESSO! (Caminhos felizes e infelizes validados) ✨ ---\n\n");
 }
