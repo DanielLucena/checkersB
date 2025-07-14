@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "Cinema_i.c" // Inclui o seu header exato
+#include "Cinema.h" // Inclui o seu header exato
 // Adicionado para garantir que as constantes de tipo de ingresso estejam definidas
 #ifndef Cinema__meia
 #define Cinema__meia 0
@@ -48,6 +48,7 @@ void handle_comprar_ingresso();
 void handle_disponibilizar_sala();
 void handle_indisponibilizar_sala();
 void handle_executar_cenario_teste();
+void handle_executar_cenario_teste_limites_e_bordas();
 void handle_query_filmes();
 void handle_query_salas();
 void handle_visualizar_filmes_em_cartaz();
@@ -64,7 +65,7 @@ void exibir_menu()
 {
     int hora_atual = -1;
     Cinema__query_Passar_Hora(&hora_atual);
-    printf("\n--- 🎟️  Sistema de Gerenciamento de Cinema (Hora Atual: %02dh) 🎟️  ---\n", hora_atual);
+    printf("\n--- 🎟️  Sistema de Gerenciamento Multicine cinemas (Hora Atual: %02dh) 🎟️  ---\n", hora_atual);
     printf("--- Gerenciamento ---\n");
     printf(" 1. Adicionar Filme\n");
     printf(" 2. Remover Filme\n");
@@ -86,6 +87,7 @@ void exibir_menu()
     printf("--- Sistema e Testes ---\n");
     printf(" 18. Avançar Hora do Sistema\n");
     printf(" 19. Executar Cenário de Teste Completo\n");
+    printf(" 20. Executar Cenário de Teste Completo de borda\n");
     printf("----------------------------------------------------------\n");
     printf(" 0. Sair\n");
     printf("----------------------------------------------------------\n");
@@ -163,8 +165,11 @@ int main()
         case 19:
             handle_executar_cenario_teste();
             break;
+        case 20:
+            handle_executar_cenario_teste_limites_e_bordas();
+            break;
         case 0:
-            printf("Encerrando o sistema. Até logo! 👋\n");
+            printf("Encerrando o sistema. O multicine cinemas agradece sua visita! 👋\n");
             return 0;
         default:
             printf("\n>>> ERRO: Opção inválida! Tente novamente.\n");
@@ -816,4 +821,131 @@ void handle_executar_cenario_teste()
         return;
     }
     printf("\n\n--- ✨ CENÁRIO DE TESTE CONCLUÍDO COM SUCESSO! (Caminhos felizes e infelizes validados) ✨ ---\n\n");
+}
+/**
+ * ATUALIZADO: Cenário de teste exaustivo que valida regras de negócio e limites físicos do sistema.
+ * - Adiciona testes para os limites de quantidade de filmes e salas (ex: Cinema__limit_salas).
+ * - Adiciona testes para o limite de turnos (sessões) por sala (Cinema__limit_turnos).
+ * - Mantém todos os testes de borda anteriores, como lotação esgotada e remoção de itens em uso.
+ */
+void handle_executar_cenario_teste_limites_e_bordas()
+{
+    printf("\n\n--- 🤖 INICIANDO CENÁRIO DE TESTE DE LIMITES E BORDAS 🤖 ---\n");
+    printf("--- Valida regras de negócio e limites físicos definidos no .h ---\n");
+
+    // Zera o estado para um teste limpo
+    Cinema__INITIALISATION();
+
+    // --- Parâmetros do Teste ---
+    Cinema__FILME id_filme_principal = 1;
+    Cinema__SALA id_sala_principal = 1;
+    int capacidade_padrao = 10; // Cinema__limit_capacidade
+    int horario_principal = 18;
+    int horario_secundario = 21;
+    int horario_terceiro = 16;
+
+
+    // --- ETAPA 1: TESTES DE ESGOTAMENTO DE RECURSOS (LIMITES FÍSICOS) ---
+    printf("\n--- [ETAPA 1: TESTE] Validando limites de criação (Máx Salas e Filmes) ---\n");
+
+    // Teste: Atingir o limite de salas e tentar ultrapassar
+    printf("--- [ETAPA 1.1] Adicionando %d salas para atingir o limite...\n", Cinema__limit_salas);
+    for (int i = 0; i < Cinema__limit_salas; i++) {
+        // Usar IDs diferentes para não conflitar. Ex: 10, 11, 12, 13
+        if (!executar_adicionar_sala(0 + i, capacidade_padrao)) {
+             printf("🔴 TESTE FALHOU: Não foi possível adicionar a %dª sala.\n", i + 1);
+             return;
+        }
+    }
+    if (executar_adicionar_sala(99, capacidade_padrao)) { // Tenta adicionar a 5ª sala
+        printf("🔴 LÓGICA FALHOU: Permitiu adicionar sala além do limite de %d!\n", Cinema__limit_salas);
+        return;
+    }
+    printf("✅ SUCESSO ESPERADO: Sistema impediu criação de sala além do limite.\n");
+
+    // Teste: Atingir o limite de filmes e tentar ultrapassar
+    printf("--- [ETAPA 1.2] Adicionando %d filmes para atingir o limite...\n", Cinema__limit_filmes);
+    for (int i = 0; i < Cinema__limit_filmes; i++) {
+        // Usar IDs diferentes. Ex: 100, 101, ...
+        if (!executar_adicionar_filme(1 + i)) {
+             printf("🔴 TESTE FALHOU: Não foi possível adicionar o %dº filme.\n", i + 1);
+             return;
+        }
+    }
+    if (executar_adicionar_filme(999)) { // Tenta adicionar o 11º filme
+        printf("🔴 LÓGICA FALHOU: Permitiu adicionar filme além do limite de %d!\n", Cinema__limit_filmes);
+        return;
+    }
+    printf("✅ SUCESSO ESPERADO: Sistema impediu criação de filme além do limite.\n");
+
+    // Reinicia o estado para os testes de lógica não serem afetados pelo esgotamento
+    printf("--- [INFO] Reiniciando estado do cinema para próximos testes lógicos ---\n");
+    Cinema__INITIALISATION();
+
+
+    // --- ETAPA 2: TESTES DE BORDA NO AGENDAMENTO (LIMITES DE TURNO E HORÁRIO) ---
+    printf("\n--- [ETAPA 2: TESTE] Validando limites de agendamento (Turnos e Horários) ---\n");
+    executar_adicionar_sala(id_sala_principal, capacidade_padrao);
+    executar_adicionar_filme(id_filme_principal);
+
+    // Teste: Agendar nos turnos permitidos
+    printf("--- [ETAPA 2.1] Ocupando os %d turnos permitidos da sala %d...\n", Cinema__limit_turnos, id_sala_principal);
+    if (!executar_disponibilizar_sala(id_sala_principal, horario_principal) ||
+        !executar_disponibilizar_sala(id_sala_principal, horario_secundario)) {
+        printf("🔴 TESTE FALHOU: Não foi possível agendar os turnos permitidos.\n");
+        return;
+    }
+    printf("✅ SUCESSO: Os %d turnos da sala foram preenchidos.\n", Cinema__limit_turnos);
+
+    // Teste: Tentar agendar um turno extra na mesma sala
+    if (executar_disponibilizar_sala(id_sala_principal, horario_terceiro)) {
+        printf("🔴 LÓGICA FALHOU: Permitiu agendar um 3º turno na mesma sala (limite é %d)!\n", Cinema__limit_turnos);
+        return;
+    }
+    printf("✅ SUCESSO ESPERADO: Sistema impediu agendamento de turno extra na sala.\n");
+
+    // Teste: Tentar agendar em horário inválido (máximo e negativo)
+    if (executar_disponibilizar_sala(id_sala_principal, Cinema__horario_max) || executar_disponibilizar_sala(id_sala_principal, -1)) {
+        printf("🔴 LÓGICA FALHOU: Permitiu agendar em horário inválido (>= %d ou < 0)!\n", Cinema__horario_max);
+        return;
+    }
+    printf("✅ SUCESSO ESPERADO: Sistema impediu agendamento em horários inválidos.\n");
+
+
+    // --- ETAPA 3: TESTES DE BORDA NA VENDA DE INGRESSOS (ESGOTAMENTO) ---
+    printf("\n--- [ETAPA 3: TESTE] Validando venda de ingressos até a lotação esgotar ---\n");
+    executar_adicionar_sessao(id_sala_principal, horario_principal, id_filme_principal);
+
+    printf("--- [ETAPA 3.1] Vendendo ingressos até o limite da sala (%d)...\n", capacidade_padrao);
+    // Vende todas as meias (5)
+    for (int i = 0; i < (capacidade_padrao / 2); i++) {
+        executar_comprar_ingresso(id_filme_principal, horario_principal, Cinema__meia, 0);
+    }
+    // Vende todas as inteiras (5)
+    for (int i = 0; i < (capacidade_padrao / 2); i++) {
+        executar_comprar_ingresso(id_filme_principal, horario_principal, Cinema__inteira, 0);
+    }
+
+    if (executar_consultar_ingressos_disponiveis(id_sala_principal, horario_principal) != 0) {
+        printf("🔴 TESTE FALHOU: Sala deveria estar com 0 ingressos disponíveis!\n");
+        return;
+    }
+    printf("✅ SUCESSO: Sala consta como esgotada.\n");
+
+    if (executar_comprar_ingresso(id_filme_principal, horario_principal, Cinema__inteira, 0)) {
+        printf("🔴 LÓGICA FALHOU: Permitiu comprar ingresso para sala lotada!\n");
+        return;
+    }
+    printf("✅ SUCESSO ESPERADO: Sistema impediu compra para sala lotada.\n");
+
+    // --- ETAPA 4: TESTES DE INTEGRIDADE E REMOÇÃO ---
+    printf("\n--- [ETAPA 4: TESTE] Validando integridade na remoção de itens em uso ---\n");
+    if (executar_remover_sessao(id_sala_principal, horario_principal)) {
+        printf("🔴 LÓGICA FALHOU: Permitiu remover sessão com ingressos vendidos!\n");
+        return;
+    }
+    printf("✅ SUCESSO ESPERADO: Sistema impediu remoção de sessão com ingressos.\n");
+
+
+    printf("\n\n--- ✨ CENÁRIO COMPLETO DE LIMITES E BORDAS CONCLUÍDO COM SUCESSO! ✨ ---\n\n");
 }

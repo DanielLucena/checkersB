@@ -9,8 +9,6 @@ CONSTANTS
    limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO, dummyFilme, dummyAssento, dummyIngresso
    
 PROPERTIES
-   //valores das contantes
-   //CORRECAO: passar valores das constantes para arquivo Cinema_ProB
      limit_capacidade : NAT1
    & limit_salas : NAT1
    & limit_filmes : NAT1
@@ -18,10 +16,6 @@ PROPERTIES
    & horario_max: NAT1
    
 
-   
-   //CORRECAO: Horário tem que ser uma constante
-    //Solucao: 24 horas 
-//   & HORARIO <: NAT
    & HORARIO = 0..horario_max
    & dummyFilme: FILME
    & dummyAssento: ASSENTO
@@ -38,10 +32,7 @@ VARIABLES
      salaHasCapacidade, salaHasHorarios, sessao
      ,ingressos_vendidos
      ,ingressos_meia
-     //CORRECAO: Remover conceito de turno 
-     //e inserir conceito de hora
      ,horaAtual
-     //CORRECAO: remover variavel ingressos_ofertados 
      ,acentos_sessao
      
 
@@ -59,8 +50,6 @@ INVARIANT
          & salaHasCapacidade : salas --> 1..limit_capacidade
          
      //3. Invariantes de horarios
-     //CORRECAO: Refinar o conceito de horário para (inicio, fim)
-//         & horaAtual: NAT
          & horaAtual: HORARIO
          
      //4. Invariantes de salaHasHorarios
@@ -69,7 +58,6 @@ INVARIANT
          &!ss .(ss:SALA => card({ss} <| salaHasHorarios) <= limit_turnos )
          
      //5. Invarintes de sessão
-     //CORRECAO: Inserir o conceito de assento marcado para a sessão
          & sessao : salaHasHorarios +-> filmes
          & ingressos_vendidos : salaHasHorarios +-> 0..limit_capacidade
          & dom(sessao) = dom(ingressos_vendidos)
@@ -93,9 +81,6 @@ INVARIANT
 
             & ingressos_meia((ss|->hh) ) <= 
         salaHasCapacidade(ss)/2
-
-//            & ingressos_ofertados((ss|->hh) |-> sessao(ss|->hh)) = 
-//        salaHasCapacidade(ss)
 
             & ingressos_meia((ss|->hh)) 
                 <= ingressos_vendidos((ss|->hh))
@@ -162,8 +147,6 @@ OPERATIONS
        || salaHasCapacidade := {ss } <<| salaHasCapacidade
     END;
     
-    //CORRECAO: Remover tipos abstratos da assinatura das operações
-    //Solucao: trocar sequencia por array
      ff <-- QuerySalas =
     PRE salas /= {}
     THEN
@@ -268,7 +251,6 @@ OPERATIONS
               ingressos_vendidos := dom(ingressos_vendidos)*{0}
               || ingressos_meia := dom(ingressos_meia)*{0}
               || horaAtual := 0
-              //zerar acentos das sessoes
               || acentos_sessao := dom(acentos_sessao)* {(0..limit_capacidade-1)*{FALSE}}
           ELSE
               horaAtual := horaAtual + 1
@@ -300,8 +282,6 @@ OPERATIONS
     THEN ii := ingressos_vendidos(ss|->hh)
     END;
     
-    //CORRECAO: Remover tipos abstratos da assinatura das operações
-    //Solucao: trocar sequencia por array
     rr <-- visualizarFilmesEmCartaz =
     PRE filmes /= {}
     THEN
@@ -314,8 +294,6 @@ OPERATIONS
     END;
 
     
-   //CORRECAO: Remover tipos abstratos da assinatura das operações
-    //Solucao: trocar sequencia por array 
    rr <-- VisualizarFilmesPorHorario(hh) =
     PRE 
         hh : HORARIO
@@ -330,9 +308,6 @@ OPERATIONS
 
    
    
-    
-    //CORRECAO: Remover tipos abstratos da assinatura das operações
-    //Solucao: trocar sequencia por array
      rr <-- VisualizarHorariosPorFilme(ff) =
     PRE 
         ff : FILME & ff : filmes
@@ -346,8 +321,7 @@ OPERATIONS
     END;
 
    
-   
-   //CORRECAO: Todas as operações que serão chamadas pela interface deverão adotar uma das duas abordagens discutidas em sala da aula. QUalquer dúvida pode me procurar.
+// Operaçoes de PRE
    
    ok<-- pre_adicionarFilme(ff) =
    PRE ff: FILME
