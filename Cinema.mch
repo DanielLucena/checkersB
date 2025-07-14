@@ -6,7 +6,7 @@ MACHINE
     Cinema
     
 CONSTANTS
-   limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO, dummyFilme, dummyAssento
+   limit_capacidade, limit_salas, limit_filmes, limit_turnos, horario_max, HORARIO, dummyFilme, dummyAssento, dummyIngresso
    
 PROPERTIES
    //valores das contantes
@@ -25,12 +25,14 @@ PROPERTIES
    & HORARIO = 0..horario_max
    & dummyFilme: FILME
    & dummyAssento: ASSENTO
+   & dummyIngresso: INGRESSO
    
 SETS
     SALA
     ;FILME
     ;TIPO_INGRESSO = {meia,inteira}
     ; ASSENTO
+    ; INGRESSO
 
 VARIABLES
      filmes, salas,
@@ -203,6 +205,7 @@ OPERATIONS
        & ss:salas & ff:filmes & ff/= dummyFilme
        & ss|->hh : salaHasHorarios 
        & ss|->hh /: dom(sessao)
+
        & !s2 .(s2 : SALA & (s2 |-> hh) : dom(sessao) => sessao(s2 |-> hh) /= ff)
     THEN
        sessao := sessao \/ {(ss|->hh)|->ff} 

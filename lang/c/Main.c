@@ -197,7 +197,7 @@ bool executar_adicionar_sessao(Cinema__SALA id_sala, int horario, Cinema__FILME 
 bool executar_comprar_ingresso(Cinema__FILME id_filme, int horario, Cinema__TIPO_INGRESSO tipo, int assento)
 {
     bool pre_condicao_ok = false;
-    Cinema__pre_comprarIngresso(id_filme, horario, tipo, &pre_condicao_ok);
+    Cinema__pre_comprarIngresso(id_filme, horario, tipo, assento, &pre_condicao_ok);
     if (pre_condicao_ok)
     {
         Cinema__ComprarIngresso(id_filme, horario, tipo, assento);
@@ -555,18 +555,25 @@ void handle_executar_cenario_teste()
 
     // Parâmetros do Teste
     Cinema__FILME id_filme_teste = 2;
+    Cinema__FILME id_filme_teste2 = 4;
     Cinema__SALA id_sala_teste = 1;
+    Cinema__SALA id_sala_teste2 = 2;
     int capacidade_teste = 10;
     int horario_teste = 18;
+    int horario_teste2 = 10;
     int assento_teste_1 = 1;
     int assento_teste_2 = 2;
 
     // ETAPA 1 e 2: SETUP E AGENDAMENTO
     printf("\n--- [AÇÃO] Adicionando Itens e Agendando Sessão ---\n");
     if (!executar_adicionar_filme(id_filme_teste) ||
+        !executar_adicionar_filme(id_filme_teste2) ||
         !executar_adicionar_sala(id_sala_teste, capacidade_teste) ||
+        !executar_adicionar_sala(id_sala_teste2, capacidade_teste) ||
         !executar_disponibilizar_sala(id_sala_teste, horario_teste) ||
-        !executar_adicionar_sessao(id_sala_teste, horario_teste, id_filme_teste))
+        !executar_disponibilizar_sala(id_sala_teste2, horario_teste2) ||
+        !executar_adicionar_sessao(id_sala_teste, horario_teste, id_filme_teste) ||
+        !executar_adicionar_sessao(id_sala_teste2, horario_teste2, id_filme_teste2))
     {
         printf("🔴 TESTE FALHOU: Erro na etapa inicial de setup. Abortando.\n");
         return;
@@ -574,7 +581,7 @@ void handle_executar_cenario_teste()
 
     // ETAPA 3: VERIFICAÇÕES CRUZADAS PÓS-AGENDAMENTO
     printf("\n--- [VERIFICAÇÃO] Checando a sessão criada com múltiplas consultas ---\n");
-    if (executar_visualizar_filmes_em_cartaz() != 1)
+    if (executar_visualizar_filmes_em_cartaz() != 2)
     {
         printf("🔴 TESTE FALHOU: A contagem de filmes em cartaz deveria ser 1.\n");
         return;
@@ -617,27 +624,38 @@ void handle_executar_cenario_teste()
 
     // ETAPA 6: LIMPEZA
     printf("\n--- [AÇÃO] Removendo a Sessão e Itens ---\n");
-    if (!executar_remover_sessao(id_sala_teste, horario_teste))
+    if (!executar_remover_sessao(id_sala_teste2, horario_teste2))
     {
-        printf("🔴 TESTE FALHOU: Não foi possível remover a sessão. Abortando.\n");
+        printf("🔴 TESTE FALHOU: o sistema permitiu remover a sessão. Abortando.\n");
         return;
+    }
+
+    printf("\n--- [AÇÃO] Removendo a Sessão e Itens ---\n");
+    if (executar_remover_sessao(id_sala_teste, horario_teste))
+    {
+        printf("🔴 LÓGICA DO SISTEMA FALHOU: Permitiu remover uma sessão com ingressos vendidos\n");
+        return;
+    }
+    else
+    {
+        printf("✅ SUCESSO ESPERADO: O sistema corretamente impediu a remoção de sessão.\n");
     }
 
     // ETAPA 7: VERIFICAÇÃO PÓS-LIMPEZA DA SESSÃO
     printf("\n--- [VERIFICAÇÃO] Checando se a sessão foi removida ---\n");
-    if (executar_visualizar_filmes_em_cartaz() != 0)
+    if (executar_visualizar_filmes_em_cartaz() != 1)
     {
         printf("🔴 TESTE FALHOU: A contagem de filmes em cartaz deveria ser 0.\n");
         return;
     }
     // NOVA VERIFICAÇÃO: A consulta agora deve retornar 0.
-    if (executar_visualizar_filmes_por_horario(horario_teste) != 0)
+    if (executar_visualizar_filmes_por_horario(horario_teste) != 1)
     {
         printf("🔴 TESTE FALHOU: A consulta por horário deveria retornar 0 filmes.\n");
         return;
     }
     // NOVA VERIFICAÇÃO: A consulta agora deve retornar 0.
-    if (executar_visualizar_horarios_por_filme(id_filme_teste) != 0)
+    if (executar_visualizar_horarios_por_filme(id_filme_teste) != 1)
     {
         printf("🔴 TESTE FALHOU: A consulta por filme deveria retornar 0 horários.\n");
         return;
@@ -645,9 +663,9 @@ void handle_executar_cenario_teste()
     printf("✅ SUCESSO: Todas as verificações de remoção de sessão passaram.\n");
 
     // Continua a limpeza final
-    if (!executar_indisponibilizar_sala(id_sala_teste, horario_teste) ||
-        !executar_remover_sala(id_sala_teste) ||
-        !executar_remover_filme(id_filme_teste))
+    if (!executar_indisponibilizar_sala(id_sala_teste2, horario_teste2) ||
+        !executar_remover_sala(id_sala_teste2) ||
+        !executar_remover_filme(id_filme_teste2))
     {
         printf("🔴 TESTE FALHOU: Erro na limpeza final de sala e filme. Abortando.\n");
         return;
@@ -655,7 +673,7 @@ void handle_executar_cenario_teste()
 
     // ETAPA 8: VERIFICAÇÃO FINAL
     printf("\n--- [VERIFICAÇÃO FINAL] Checando se o sistema está limpo ---\n");
-    if (executar_query_filmes() != 0 || executar_query_salas() != 0)
+    if (executar_query_filmes() != 1 || executar_query_salas() != 1)
     {
         printf("🔴 TESTE FALHOU: O sistema não está limpo no final do teste.\n");
         return;
