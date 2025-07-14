@@ -30,7 +30,6 @@ PROPERTIES
 SETS
     SALA
     ;FILME
-    ;TIPO_INGRESSO = {meia,inteira}
     ; ASSENTO
     ; INGRESSO
 
@@ -234,7 +233,7 @@ OPERATIONS
     PRE
         ff: FILME
        & hh: HORARIO 
-       & tt: TIPO_INGRESSO
+       & tt: 0..1
        & aa: NAT
        & aa: 0..limit_capacidade-1
        & #(ss).
@@ -242,7 +241,7 @@ OPERATIONS
            & (ss |-> hh) : dom(sessao) 
            & sessao(ss |-> hh) = ff 
             & ingressos_vendidos(ss|->hh) < salaHasCapacidade(ss)
-           & (tt=meia => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
+           & (tt=0 => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
            & (aa|->FALSE): acentos_sessao(ss |-> hh)
        )
        & hh >= horaAtual
@@ -254,7 +253,7 @@ OPERATIONS
        || acentos_sessao(ss |-> hh) := 
        acentos_sessao(ss |-> hh) <+ {aa|->TRUE}
        || 
-       IF tt=meia
+       IF tt=0
       THEN ingressos_meia(ss|->hh) := ingressos_meia(ss|->hh) +1
        ELSE skip
            END
@@ -428,7 +427,7 @@ OPERATIONS
 
    
 ok <-- pre_comprarIngresso(ff, hh, tt,aa) =
-   PRE ff : FILME & hh : HORARIO & tt : TIPO_INGRESSO & aa: NAT
+   PRE ff : FILME & hh : HORARIO & tt : 0..1 & aa: NAT
    THEN
        IF 
           hh >= horaAtual
@@ -438,7 +437,7 @@ ok <-- pre_comprarIngresso(ff, hh, tt,aa) =
               (ss |-> hh) : dom(sessao) &
               sessao(ss |-> hh) = ff &
               ingressos_vendidos(ss |-> hh) < salaHasCapacidade(ss) &
-              (tt = meia => ingressos_meia(ss |-> hh) < salaHasCapacidade(ss) / 2)
+              (tt = 0 => ingressos_meia(ss |-> hh) < salaHasCapacidade(ss) / 2)
               & (aa|->FALSE): acentos_sessao(ss |-> hh)
           )
        THEN ok := TRUE

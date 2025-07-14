@@ -6,6 +6,14 @@
 IMPLEMENTATION Cinema_i
     
 REFINES Cinema
+    
+CONCRETE_CONSTANTS 
+    meia, inteira, TIPO_INGRESSO
+    
+PROPERTIES
+    meia : NAT & inteira : NAT 
+     & meia /= inteira &
+    TIPO_INGRESSO <: NAT    
 
 VALUES //valores para os SETs
     limit_capacidade = 10;
@@ -14,14 +22,20 @@ VALUES //valores para os SETs
     limit_turnos = 2;
     horario_max = 24;
     
-    SALA = 0..limit_salas; // MUDAR PARA 0..limit_salas ou 0..limit_salas-1
-    FILME = 0..limit_filmes; // MUDAR PARA 0..limit_filmes ou 0..limit_filmes-1
+    SALA = 0..limit_salas; 
+    FILME = 0..limit_filmes;
     HORARIO = 0..horario_max;
     ASSENTO = 0..limit_capacidade;
     INGRESSO= -1..limit_capacidade;
     dummyFilme = 0;
     dummyAssento = 0;
-    dummyIngresso = -1
+    dummyIngresso = -1;
+    meia = 0;
+    inteira = 1;
+    TIPO_INGRESSO = meia..inteira
+    
+   
+    
     
 CONCRETE_VARIABLES
     filmes_i
@@ -30,7 +44,7 @@ CONCRETE_VARIABLES
     ,salaHasHorarios_i
     , sessao_i
     ,ingressos_vendidos_i
-//    ,ingressos_meia_i
+    ,ingressos_meia_i
 
 
      ,horaAtual_i
@@ -83,7 +97,6 @@ INVARIANT
      
     // Refinamento dos dados de ingressos e assentos
     //todo: falta especificar cada um deles ainda e relacionar com a maquina abstrata
-    //todo: talvez usar a ideia de dummy colocando o dummy como zero e  toda operacao ele checa primeiro se é o dummy se for ai ele coloca 1 se n for o dummy ele so vai somando normal, teria que toda vez q zerar o dia ele iria para o dummy.
     & ingressos_vendidos_i : (SALA * HORARIO) --> INGRESSO
     & ingressos_vendidos = ingressos_vendidos_i |>> {dummyIngresso}
 //    & !(ss,hh).( ss: SALA & hh: HORARIO | (ss,hh) : dom(sessao) => 
@@ -92,7 +105,12 @@ INVARIANT
     
     
     
-//    & ingressos_meia_i : SALA * HORARIO --> 0..limit_capacidade
+     & ingressos_meia_i : SALA * HORARIO --> -1..limit_capacidade/2
+     & ingressos_meia = ingressos_meia_i |>>{dummyIngresso}
+     &card(ingressos_meia_i |>>{dummyIngresso})<= card(ingressos_vendidos_i |>> {dummyIngresso})
+     
+     
+     
 //    & acentos_sessao_i : SALA*HORARIO *FILME --> (0..limit_capacidade)   
 
 
@@ -116,8 +134,8 @@ INITIALISATION
     
 
     horaAtual_i := 0;
-   ingressos_vendidos_i := (SALA * HORARIO) * {dummyIngresso}
-//    ingressos_meia_i := (SALA * HORARIO) * {0}
+   ingressos_vendidos_i := (SALA * HORARIO) * {dummyIngresso};
+    ingressos_meia_i := (SALA * HORARIO) * {dummyIngresso}
 //    acentos_sessao_i := ((SALA*HORARIO)*{dummyFilme}) *(0..limit_capacidade)
 
     
@@ -224,8 +242,8 @@ OPERATIONS
     AdicionarSessao(ss, hh, ff) = 
     BEGIN
            sessao_i(ss, hh) := ff;
-           ingressos_vendidos_i(ss, hh) := 0
-//           ingressos_meia_i(ss, hh) := 0;
+           ingressos_vendidos_i(ss, hh) := 0;
+           ingressos_meia_i(ss, hh) := 0
     
        END;
 
@@ -233,7 +251,8 @@ OPERATIONS
     RemoverSessao(ss,hh) =
     BEGIN
         sessao_i(ss, hh) := dummyFilme;
-        ingressos_vendidos_i(ss, hh) := dummyIngresso
+        ingressos_vendidos_i(ss, hh) := dummyIngresso;
+        ingressos_meia_i(ss,hh) := dummyIngresso
     END;
      
 
@@ -254,7 +273,9 @@ OPERATIONS
                          filmeAtual := sessao_i(ss,hh);
                          IF filmeAtual /= dummyFilme 
                          THEN 
-                                  ingressos_vendidos_i(ss,hh) := 0
+                                  ingressos_vendidos_i(ss,hh) := 0;
+                                  //Acho que aqui ta ok sobre o ingresso_meia
+                                   ingressos_meia_i(ss,hh) := 0
                           END
                       INVARIANT
                           hh: HORARIO 
@@ -295,8 +316,18 @@ BEGIN
         WHILE ss < limit_salas & filmeAtual /= ff DO
             filmeAtual:= sessao_i(ss,hh);
             IF ff = filmeAtual THEN
+                //& (tt=meia => ingressos_meia(ss|->hh) < (salaHasCapacidade(ss)/2))
                 //Implementar o if de tt para ir para meia aqui
-                ingressos_vendidos_i(ss,hh) := ingressos_vendidos_i(ss,hh) + 1
+                IF tt = meia
+                THEN
+                     ingressos_vendidos_i(ss,hh) := ingressos_vendidos_i(ss,hh) + 1;
+                                                       //Acho que aqui ta ok sobre o ingresso_meia
+                     ingressos_meia_i(ss,hh) := ingressos_meia_i(ss,hh) +1
+                END;
+                IF tt= inteira
+                THEN                   
+                    ingressos_vendidos_i(ss,hh) := ingressos_vendidos_i(ss,hh) + 1
+                END
             END;
             ss := ss + 1
         INVARIANT 
@@ -613,10 +644,11 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
    
    ok <-- pre_comprarIngresso(ff, hh, tt,aa) =
     BEGIN
-        VAR ss, filmeAtual,salaExists, ingressosVendidos, capacidadeSala IN
+        VAR ss, filmeAtual,salaExists, ingressosVendidos, capacidadeSala, ingressosMeiaVendidos,podeVenderMeia,capacidadeSalaDividida IN
         ss := 0;
         filmeAtual:= dummyFilme;
         salaExists := FALSE;
+        podeVenderMeia:= TRUE;
         ingressosVendidos:= 0;
         capacidadeSala:= 0;
 
@@ -625,7 +657,14 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
             IF ff = filmeAtual THEN
                 salaExists := TRUE;
                 ingressosVendidos := ingressos_vendidos_i(ss,hh);
-                capacidadeSala := salaHasCapacidade_i(ss)
+                //Dar uma olhada aqui no IngressoMeia todo
+                ingressosMeiaVendidos:= ingressos_meia_i(ss,hh);
+                capacidadeSala := salaHasCapacidade_i(ss);
+                capacidadeSalaDividida := capacidadeSala/2;
+                IF ingressosMeiaVendidos >= capacidadeSalaDividida
+                THEN
+                  podeVenderMeia:= FALSE
+                 END
 
             END;
             ss := ss + 1
@@ -634,6 +673,9 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
             & filmeAtual : FILME
             & salaExists : BOOL
             & hh : HORARIO
+            &capacidadeSalaDividida:NAT
+            & podeVenderMeia : BOOL
+            & ingressosMeiaVendidos : 0..capacidadeSalaDividida
             & ingressosVendidos : NAT
             & capacidadeSala : NAT
             & salaExists = TRUE => sessao_i(ss-1, hh) = ff
@@ -642,13 +684,19 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
 
         VARIANT limit_salas - ss
         END;
-
-         IF hh>= horaAtual_i & salaExists = TRUE & ingressosVendidos < capacidadeSala & ff /= dummyFilme
+        VAR ttIsValid IN
+            ttIsValid:= TRUE;
+            IF tt = meia & podeVenderMeia = FALSE
+            THEN ttIsValid := FALSE
+            END;
+      
+             //Dar uma olhada aqui no IngressoMeia todo
+         IF hh>= horaAtual_i & salaExists = TRUE & ingressosVendidos < capacidadeSala & ff /= dummyFilme  & ttIsValid = TRUE
          THEN ok := TRUE
          ELSE ok := FALSE
          END
          END
-
+          END
     END;
    
    ok <-- pre_consultarIngressosDisponiveisPorSessao(ss, hh) =
