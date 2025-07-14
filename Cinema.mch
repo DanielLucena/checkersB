@@ -441,7 +441,16 @@ ok <-- pre_comprarIngresso(ff, hh, tt,aa) =
    END;
 
    
-   ok <-- pre_consultarIngressosPorSessao(ss, hh) =
+   ok <-- pre_consultarIngressosDisponiveisPorSessao(ss, hh) =
+   PRE ss : SALA & hh : HORARIO
+   THEN
+      IF (ss |-> hh) : dom(sessao)
+      THEN ok := TRUE
+      ELSE ok := FALSE
+      END
+   END;
+   
+   ok <-- pre_consultarIngressosCompradosPorSessao(ss, hh) =
    PRE ss : SALA & hh : HORARIO
    THEN
       IF (ss |-> hh) : dom(sessao)

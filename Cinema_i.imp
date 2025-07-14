@@ -645,7 +645,28 @@ ok <-- pre_adicionarSessao(ss, hh, ff) =
 
     END;
    
-   ok <-- pre_consultarIngressosPorSessao(ss, hh) =
-    skip
+   ok <-- pre_consultarIngressosDisponiveisPorSessao(ss, hh) =
+   BEGIN
+       VAR sessaoFilme IN
+           sessaoFilme := sessao_i(ss, hh);
+           IF sessaoFilme /= dummyFilme
+           THEN ok := TRUE
+           ELSE ok := FALSE
+           END
+       END
+   END;
+   
+   
+    
+    ok <-- pre_consultarIngressosCompradosPorSessao(ss, hh) =
+    BEGIN
+       VAR sessaoFilme IN
+           sessaoFilme := sessao_i(ss, hh);
+           IF sessaoFilme /= dummyFilme
+           THEN ok := TRUE
+           ELSE ok := FALSE
+           END
+       END
+   END
 
 END
