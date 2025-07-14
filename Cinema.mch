@@ -126,7 +126,6 @@ OPERATIONS
     PRE
         ff: FILME & ff:filmes 
         & sessao |> {ff} = {}
-        & filmes = ran(sessao) - {ff}
     THEN
        filmes := filmes - {ff}
     END;
