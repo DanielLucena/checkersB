@@ -418,22 +418,25 @@ OPERATIONS
     END;
 
    
-   ok <-- pre_comprarIngresso(ff, hh, tt) =
-   PRE ff : FILME & hh : HORARIO & tt : TIPO_INGRESSO
+ok <-- pre_comprarIngresso(ff, hh, tt,aa) =
+   PRE ff : FILME & hh : HORARIO & tt : TIPO_INGRESSO & aa: NAT
    THEN
        IF 
           hh >= horaAtual
+          & aa: 0..limit_capacidade-1
           & #(ss).(
               ss : SALA &
               (ss |-> hh) : dom(sessao) &
               sessao(ss |-> hh) = ff &
               ingressos_vendidos(ss |-> hh) < salaHasCapacidade(ss) &
               (tt = meia => ingressos_meia(ss |-> hh) < salaHasCapacidade(ss) / 2)
+              & (aa|->FALSE): acentos_sessao(ss |-> hh)
           )
        THEN ok := TRUE
        ELSE ok := FALSE
        END
    END;
+
    
    ok <-- pre_consultarIngressosPorSessao(ss, hh) =
    PRE ss : SALA & hh : HORARIO
