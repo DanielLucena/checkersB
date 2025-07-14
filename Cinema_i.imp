@@ -47,9 +47,9 @@ INVARIANT
     
     
     
-    //todo: Invariante de ligacao
     & salaHasHorarios_i: SALA*HORARIO --> BOOL
     & salaHasHorarios = dom(salaHasHorarios_i |> {TRUE})  
+    
     
     & sessao_i: SALA*HORARIO --> FILME
     & sessao = sessao_i |>> {dummyFilme}
@@ -157,8 +157,6 @@ OPERATIONS
                limit_filmes - ii
            END
        END
-       
-               
     END;
     
     //Sala
@@ -276,8 +274,41 @@ OPERATIONS
     ii<--ConsultarIngressosCompradosPorSessao(ss,hh)=
      skip;
 
-    rr <-- visualizarFilmesEmCartaz =
-        rr := FILME*{FALSE};
+rr <-- visualizarFilmesEmCartaz =
+  BEGIN
+    VAR sala, horario, filmeSessao IN
+      sala := 0;
+      rr := FILME * {FALSE};
+
+      WHILE sala < limit_salas DO
+        horario := 0;
+        WHILE horario < horario_max DO
+          filmeSessao := sessao_i(sala, horario);
+          IF filmeSessao /= dummyFilme THEN
+            rr(filmeSessao) := TRUE
+          END;
+          horario := horario + 1
+        INVARIANT
+          horario : 0..horario_max 
+          & filmeSessao : FILME 
+          & rr : FILME --> BOOL
+          & !kk.(kk : 0..horario-1 =>
+         (sessao_i(sala, kk) /= dummyFilme => rr(sessao_i(sala, kk)) = TRUE))
+        VARIANT
+          horario_max - horario
+        END;
+        sala := sala + 1
+      INVARIANT
+        sala : 0..limit_salas 
+        & rr : FILME --> BOOL
+        & !(ss,hh).(ss : 0..sala-1 & hh : 0..horario_max-1 => (sessao_i(ss, hh) /= dummyFilme => rr(sessao_i(ss, hh)) = TRUE))
+      VARIANT
+        limit_salas - sala
+      END
+      END
+  END;
+
+
 //    skip;
 
    
@@ -304,17 +335,48 @@ OPERATIONS
      
    //todo : ff/= ran(sessao_i)
    ok <-- pre_removerFilme(ff) =
-     BEGIN
-        VAR filme IN
-            filme := filmes_i(ff);
-            IF filme = TRUE & ff<=limit_filmes & ff/=dummyFilme
-            THEN ok := TRUE
-            ELSE ok := FALSE
-            END
-        END
-        
-    END;
-       
+  BEGIN
+    VAR filme, ii, jj, emSessao, filmeAtual IN
+      filme := filmes_i(ff);
+      ii := 0;
+      jj := 0;
+      emSessao := FALSE;
+      WHILE ii < limit_salas & emSessao = FALSE DO
+        jj := 0;
+        WHILE jj < horario_max & emSessao = FALSE DO
+            filmeAtual := sessao_i(ii,jj);
+              IF filmeAtual = ff THEN
+                emSessao := TRUE
+              END;
+              jj := jj + 1
+        INVARIANT
+          jj : 0..horario_max+1 
+          & emSessao : BOOL 
+          & ii : 0..limit_salas 
+          & !kk.(kk : 0..jj-1 => sessao_i(ii, kk) /= ff)
+        VARIANT
+          horario_max - jj
+        END;
+        ii := ii + 1
+      INVARIANT
+        ii : 0..limit_salas+1 
+        &  emSessao : BOOL 
+        & !kk.(kk : 0..ii-1 => !ll.(ll : 0..horario_max => sessao_i(kk, ll) /= ff))
+      VARIANT
+        limit_salas - ii
+      END;
+      IF filme = TRUE 
+          & ff <= limit_filmes 
+          & ff /= dummyFilme 
+          & emSessao = FALSE THEN
+        ok := TRUE
+      ELSE
+        ok := FALSE
+      END
+      END
+  END;
+
+   //OK    
    ok<-- pre_adicionarSala(ss, tt) =
    BEGIN
        VAR sala IN
@@ -327,20 +389,38 @@ OPERATIONS
    END;
    
            
-   //todo : {ss} <| salaHasHorarios = {} 
+   //OK
    ok <-- pre_removerSala(ss)= 
     BEGIN
-       VAR sala IN
-           sala := salas_i(ss);
-           IF sala = TRUE & ss<= limit_salas
+       VAR salaExists, hh, hasHorario,slotAtual IN
+           salaExists := salas_i(ss);
+           hh := 0;
+           hasHorario := FALSE;
+           WHILE hh < horario_max & hasHorario = FALSE
+           DO
+               slotAtual := salaHasHorarios_i(ss,hh);
+               IF slotAtual = TRUE
+               THEN hasHorario := TRUE
+               END;
+               hh := hh + 1
+           INVARIANT
+               hh: NAT & hasHorario:BOOL & slotAtual:BOOL & hh <= horario_max
+               & hasHorario = TRUE <=> (#jj.(jj : 0..hh-1 & salaHasHorarios_i(ss,jj) = TRUE))
+           VARIANT
+               horario_max - hh
+           END;
+
+
+           IF salaExists = TRUE & ss<= limit_salas & hasHorario = FALSE
            THEN ok := TRUE
            ELSE ok := FALSE
            END
        END
    END;
+
    
    
-//todo: Lembrar do limite de turno e talvez somar nas de adicao e subtrair nas de remocao para quando chegar em consulta apenas utilizar o valor.
+//OK
    ok <-- pre_disponibilizarSalaEmHorarios(ss, hh) =
     BEGIN
         VAR disponivel, existeSala, ii, jj, temHorario IN
@@ -359,7 +439,7 @@ OPERATIONS
                 & ii = card({hh | hh : 0..jj-1 & salaHasHorarios_i(ss, hh) = TRUE})
             VARIANT horario_max - jj
             END;
-            IF disponivel = FALSE & existeSala = TRUE & ii< limit_turnos
+            IF disponivel = FALSE & existeSala = TRUE & ii< limit_turnos & hh<= horario_max & hh >=0
             THEN ok:= TRUE
              ELSE ok := FALSE
              END
@@ -367,14 +447,14 @@ OPERATIONS
             
     END;
    
-   //todo: sessao
+   //ACHO que OK
    ok <-- pre_indisponibilizarSalaEmHorarios(ss, hh) =
        BEGIN
-        VAR disponivel, existeSala IN
+        VAR disponivel, existeSala, filmeDaSessao IN
             existeSala := salas_i(ss);
             disponivel:= salaHasHorarios_i(ss,hh);
-            
-            IF disponivel = TRUE & existeSala = TRUE
+            filmeDaSessao:= sessao_i(ss,hh);     
+            IF disponivel = TRUE & existeSala = TRUE & filmeDaSessao = dummyFilme &  hh<= horario_max & hh >=0
             THEN ok:= TRUE
              ELSE ok := FALSE
              END
@@ -383,11 +463,55 @@ OPERATIONS
     END;
 
    
-   ok <-- pre_adicionarSessao(ss, hh, ff) =
-    skip;
+ok <-- pre_adicionarSessao(ss, hh, ff) =
+     BEGIN
+        VAR existeSalaHorario, existeSala, filmeAtual, ii, passandoEmOutraSala IN
+            existeSala := salas_i(ss);
+            existeSalaHorario:= salaHasHorarios_i(ss,hh);
+            filmeAtual:= sessao_i(ss,hh);
+            ii := 0;
+            passandoEmOutraSala := FALSE;
+            WHILE ii < limit_salas & passandoEmOutraSala = FALSE
+                DO
+                VAR filmeSalaAtual IN
+                    filmeSalaAtual := sessao_i(ii, hh);
+                    IF filmeSalaAtual = filmeAtual 
+                    THEN passandoEmOutraSala := TRUE
+                    END;
+                    ii := ii + 1
+                END
+                INVARIANT
+                    ii:NAT & passandoEmOutraSala:BOOL & ii<= limit_salas
+                    & passandoEmOutraSala = TRUE <=> (#jj.(jj : 0..ii-1 & sessao_i(jj, hh) = filmeAtual))
+                VARIANT
+                    limit_salas - ii
+                END;
+
+            IF existeSalaHorario = TRUE 
+                & ff /= dummyFilme 
+                & filmeAtual = dummyFilme 
+                & passandoEmOutraSala = FALSE
+            THEN ok:= TRUE
+             ELSE ok := FALSE
+             END
+         END
+
+    END; 
     
+    //todo: pre condicao de ingresso vendido
      ok <-- pre_removerSessao(ss, hh) =
-    skip;
+   BEGIN
+       VAR existeSalaHorario, filmeAtual IN
+           existeSalaHorario:= salaHasHorarios_i(ss,hh);
+           filmeAtual := sessao_i(ss,hh);
+       IF existeSalaHorario = TRUE 
+                & filmeAtual /= dummyFilme 
+            THEN ok:= TRUE
+             ELSE ok := FALSE
+             END
+         END
+            
+    END;
    
    
    ok <-- pre_comprarIngresso(ff, hh, tt) =
